@@ -1,0 +1,253 @@
+<ui:FluentWindow x:Class="DogeDebugger.UI.Views.Dialogs.AboutWindow"
+                 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                 xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+                 Title="关于 DogeDebugger"
+                 Width="540"
+                 Height="640"
+                 MinWidth="540"
+                 MinHeight="640"
+                 MaxWidth="540"
+                 MaxHeight="640"
+                 WindowStartupLocation="CenterOwner"
+                 ResizeMode="NoResize"
+                 ShowInTaskbar="False"
+                 ExtendsContentIntoTitleBar="True"
+                 FontFamily="{DynamicResource AppUiFontFamily}"
+                 FontSize="{DynamicResource AppUiFontSize}"
+                 Background="#FFF7F7F7">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="207" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0">
+            <Grid.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                    <GradientStop Offset="0" Color="#FF4D4AA8" />
+                    <GradientStop Offset="0.55" Color="#FF5D72C8" />
+                    <GradientStop Offset="1" Color="#FF42A8C5" />
+                </LinearGradientBrush>
+            </Grid.Background>
+
+            <ui:Button Width="44"
+                       Height="30"
+                       Padding="0"
+                       HorizontalAlignment="Right"
+                       VerticalAlignment="Top"
+                       Background="Transparent"
+                       BorderThickness="0"
+                       Click="OnCloseClick"
+                       ToolTip="关闭">
+                <ui:SymbolIcon Symbol="Dismiss12" />
+            </ui:Button>
+
+            <StackPanel VerticalAlignment="Center">
+                <Border Width="92"
+                        Height="92"
+                        HorizontalAlignment="Center"
+                        Background="#30FFFFFF"
+                        BorderBrush="#70FFFFFF"
+                        BorderThickness="1"
+                        CornerRadius="18">
+                    <Image Width="72"
+                           Height="72"
+                           Source="pack://application:,,,/DogeDebugger.About.png"
+                           Stretch="Uniform" />
+                </Border>
+                <StackPanel Margin="0,16,0,0"
+                            Orientation="Horizontal"
+                            HorizontalAlignment="Center">
+                    <TextBlock FontSize="25"
+                               FontWeight="Bold"
+                               Foreground="White"
+                               Text="DogeDebugger" />
+                    <Border Margin="8,2,0,0"
+                            Padding="8,2"
+                            VerticalAlignment="Center"
+                            Background="#35FFFFFF"
+                            CornerRadius="8">
+                        <TextBlock x:Name="VersionText"
+                                   Foreground="White" />
+                    </Border>
+                </StackPanel>
+                <TextBlock Margin="0,6,0,0"
+                           HorizontalAlignment="Center"
+                           FontSize="14"
+                           Foreground="#E8FFFFFF"
+                           Text="现代化的 Windows 调试器" />
+            </StackPanel>
+        </Grid>
+
+        <Grid Grid.Row="1"
+              Margin="24,0,24,16">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Row="0"
+                       Foreground="#FF666666"
+                       Text="核心特性" />
+            <UniformGrid Grid.Row="1"
+                         Margin="0,16,0,0"
+                         Columns="3"
+                         Rows="2">
+                <Border Margin="0,0,8,10"
+                        Padding="12"
+                        Background="White"
+                        BorderBrush="#FFE2E2E2"
+                        BorderThickness="1"
+                        CornerRadius="8">
+                    <StackPanel Orientation="Horizontal">
+                        <Border Width="32"
+                                Height="32"
+                                Background="#FFE9E5FF"
+                                CornerRadius="6">
+                            <ui:SymbolIcon Symbol="Sparkle20" Foreground="#FF5A4FD1" />
+                        </Border>
+                        <TextBlock Margin="8,0,0,0"
+                                   VerticalAlignment="Center"
+                                   Text="AI 辅助分析" />
+                    </StackPanel>
+                </Border>
+                <Border Margin="0,0,8,10"
+                        Padding="12"
+                        Background="White"
+                        BorderBrush="#FFE2E2E2"
+                        BorderThickness="1"
+                        CornerRadius="8">
+                    <StackPanel Orientation="Horizontal">
+                        <Border Width="32"
+                                Height="32"
+                                Background="#FFE9E5FF"
+                                CornerRadius="6">
+                            <ui:FontIcon Glyph="&#xF690;" Foreground="#FF5A4FD1" />
+                        </Border>
+                        <TextBlock Margin="8,0,0,0"
+                                   VerticalAlignment="Center"
+                                   Text="内存搜索" />
+                    </StackPanel>
+                </Border>
+                <Border Margin="0,0,0,10"
+                        Padding="12"
+                        Background="White"
+                        BorderBrush="#FFE2E2E2"
+                        BorderThickness="1"
+                        CornerRadius="8">
+                    <StackPanel Orientation="Horizontal">
+                        <Border Width="32"
+                                Height="32"
+                                Background="#FFE9E5FF"
+                                CornerRadius="6">
+                            <ui:SymbolIcon Symbol="Code20" Foreground="#FF5A4FD1" />
+                        </Border>
+                        <TextBlock Margin="8,0,0,0"
+                                   VerticalAlignment="Center"
+                                   Text="反汇编" />
+                    </StackPanel>
+                </Border>
+                <Border Margin="0,0,8,0"
+                        Padding="12"
+                        Background="White"
+                        BorderBrush="#FFE2E2E2"
+                        BorderThickness="1"
+                        CornerRadius="8">
+                    <StackPanel Orientation="Horizontal">
+                        <Border Width="32"
+                                Height="32"
+                                Background="#FFE9E5FF"
+                                CornerRadius="6">
+                            <ui:SymbolIcon Symbol="Bug20" Foreground="#FF5A4FD1" />
+                        </Border>
+                        <TextBlock Margin="8,0,0,0"
+                                   VerticalAlignment="Center"
+                                   Text="断点调试" />
+                    </StackPanel>
+                </Border>
+                <Border Margin="0,0,8,0"
+                        Padding="12"
+                        Background="White"
+                        BorderBrush="#FFE2E2E2"
+                        BorderThickness="1"
+                        CornerRadius="8">
+                    <StackPanel Orientation="Horizontal">
+                        <Border Width="32"
+                                Height="32"
+                                Background="#FFE9E5FF"
+                                CornerRadius="6">
+                            <TextBlock HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"
+                                       FontWeight="SemiBold"
+                                       Text="A" />
+                        </Border>
+                        <TextBlock Margin="8,0,0,0"
+                                   VerticalAlignment="Center"
+                                   Text="Lua 脚本" />
+                    </StackPanel>
+                </Border>
+                <Border Padding="12"
+                        Background="White"
+                        BorderBrush="#FFE2E2E2"
+                        BorderThickness="1"
+                        CornerRadius="8">
+                    <StackPanel Orientation="Horizontal">
+                        <Border Width="32"
+                                Height="32"
+                                Background="#FFE9E5FF"
+                                CornerRadius="6">
+                            <ui:SymbolIcon Symbol="Cube20" Foreground="#FF5A4FD1" />
+                        </Border>
+                        <TextBlock Margin="8,0,0,0"
+                                   VerticalAlignment="Center"
+                                   Text="Mono / IL2CPP" />
+                    </StackPanel>
+                </Border>
+            </UniformGrid>
+
+            <TextBlock Grid.Row="2"
+                       Margin="0,12,0,0"
+                       Foreground="#FF666666"
+                       Text="运行环境" />
+            <Border Grid.Row="3"
+                    Margin="0,16,0,0"
+                    Padding="16,8"
+                    Background="White"
+                    BorderBrush="#FFE2E2E2"
+                    BorderThickness="1"
+                    CornerRadius="8">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="64" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="32" />
+                        <RowDefinition Height="32" />
+                        <RowDefinition Height="32" />
+                        <RowDefinition Height="32" />
+                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Row="0" Grid.Column="0" Foreground="#FF777777" Text="版本" />
+                    <TextBlock x:Name="VersionDetailText" Grid.Row="0" Grid.Column="1" />
+                    <TextBlock Grid.Row="1" Grid.Column="0" Foreground="#FF777777" Text="框架" />
+                    <TextBlock x:Name="FrameworkText" Grid.Row="1" Grid.Column="1" />
+                    <TextBlock Grid.Row="2" Grid.Column="0" Foreground="#FF777777" Text="系统" />
+                    <TextBlock x:Name="OperatingSystemText" Grid.Row="2" Grid.Column="1" />
+                    <TextBlock Grid.Row="3" Grid.Column="0" Foreground="#FF777777" Text="架构" />
+                    <TextBlock x:Name="ArchitectureText" Grid.Row="3" Grid.Column="1" />
+                </Grid>
+            </Border>
+
+            <TextBlock x:Name="CopyrightText"
+                       Grid.Row="5"
+                       HorizontalAlignment="Center"
+                       Foreground="#FF8A8A8A"
+                       FontSize="11" />
+        </Grid>
+    </Grid>
+</ui:FluentWindow>

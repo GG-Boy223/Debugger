@@ -1,0 +1,31 @@
+<UserControl x:Class="DogeDebugger.UI.Controls.PanelProcessOverlay"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             Panel.ZIndex="50"
+             IsHitTestVisible="True"
+             Visibility="{Binding ProcessOverlayVisibility}">
+    <Border Background="{DynamicResource SolidBackgroundFillColorBaseBrush}"
+            Opacity="1"
+            IsHitTestVisible="True">
+        <StackPanel HorizontalAlignment="Center"
+                    VerticalAlignment="Center">
+            <ui:SymbolIcon HorizontalAlignment="Center"
+                           Margin="0,0,0,8"
+                           FontFamily="{DynamicResource FluentSystemIcons}"
+                           FontSize="48"
+                           Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                           Symbol="PlugDisconnected24" />
+            <TextBlock HorizontalAlignment="Center"
+                       Margin="0,0,0,4"
+                       FontSize="16"
+                       FontWeight="SemiBold"
+                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                       Text="等待选择进程" />
+            <TextBlock HorizontalAlignment="Center"
+                       FontSize="12"
+                       Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                       Text="通过 文件 → 打开进程 选择目标进程" />
+        </StackPanel>
+    </Border>
+</UserControl>

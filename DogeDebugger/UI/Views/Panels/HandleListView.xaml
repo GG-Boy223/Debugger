@@ -1,0 +1,137 @@
+<UserControl x:Class="DogeDebugger.UI.Views.Panels.HandleListView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             xmlns:controls="clr-namespace:DogeDebugger.UI.Controls">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0"
+                Padding="6,3"
+                BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                BorderThickness="0,0,0,1">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Left"
+                            Orientation="Horizontal">
+                    <ui:Button Appearance="Primary"
+                               FontSize="11"
+                               Padding="10,3"
+                               Margin="0,0,6,0"
+                               Command="{Binding RefreshTargetPanelsCommand}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="ArrowSync24"
+                                           Margin="0,0,5,0" />
+                            <TextBlock Text="刷新" />
+                        </StackPanel>
+                    </ui:Button>
+                    <CheckBox x:Name="NamedOnlyCheck"
+                              Margin="0,0,8,0"
+                              VerticalAlignment="Center"
+                              Checked="OnFilterChanged"
+                              Unchecked="OnFilterChanged"
+                              Content="仅显示有名称的句柄" />
+                    <ProgressBar Width="180"
+                                 Height="3"
+                                 VerticalAlignment="Center"
+                                 Maximum="1"
+                                 Value="0" />
+                </StackPanel>
+                <TextBlock DockPanel.Dock="Right"
+                           HorizontalAlignment="Right"
+                           VerticalAlignment="Center"
+                           FontSize="11"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}">
+                    <Run Text="句柄数: " />
+                    <Run FontWeight="SemiBold"
+                         Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                         Text="{Binding Handles.Count, Mode=OneWay}" />
+                </TextBlock>
+                <Border />
+            </DockPanel>
+        </Border>
+
+        <DataGrid x:Name="HandleGrid"
+                  Grid.Row="1"
+                  ItemsSource="{Binding Handles}"
+                  SelectedItem="{Binding SelectedHandle}"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="True"
+                  CanUserAddRows="False"
+                  CanUserDeleteRows="False"
+                  CanUserSortColumns="True"
+                  HeadersVisibility="Column"
+                  ColumnHeaderHeight="32"
+                  GridLinesVisibility="Horizontal"
+                  EnableRowVirtualization="True"
+                  VirtualizingPanel.IsVirtualizing="True"
+                  VirtualizingPanel.VirtualizationMode="Recycling"
+                  BorderThickness="0"
+                  Background="Transparent"
+                  FontFamily="Cascadia Code, Consolas, monospace"
+                  FontSize="12"
+                  MouseDoubleClick="OnHandleGridDoubleClick">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="句柄"
+                                    Binding="{Binding HandleValueText}"
+                                    Width="90" />
+                <DataGridTextColumn Header="类型"
+                                    Binding="{Binding TypeName}"
+                                    Width="100" />
+                <DataGridTextColumn Header="名称"
+                                    Binding="{Binding Name}"
+                                    Width="320" />
+                <DataGridTextColumn Header="值"
+                                    Binding="{Binding ObjectAddressText}"
+                                    Width="145" />
+                <DataGridTextColumn Header="对象地址"
+                                    Binding="{Binding ObjectAddressText}"
+                                    Width="145" />
+                <DataGridTextColumn Header="访问权限"
+                                    Binding="{Binding GrantedAccessText}"
+                                    Width="115" />
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <Border Grid.Row="2"
+                Padding="6,4"
+                BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                BorderThickness="0,1,0,0"
+                Background="{DynamicResource SubtleFillColorSecondaryBrush}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="210" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <ComboBox Grid.Column="0"
+                          Height="28"
+                          Margin="0,0,4,0">
+                    <ComboBoxItem Content="全部类型"
+                                  IsSelected="True" />
+                </ComboBox>
+                <TextBox x:Name="HandleSearchBox"
+                         Grid.Column="1"
+                         Height="28"
+                         Padding="6,2"
+                         TextChanged="OnFilterChanged" />
+                <StackPanel Grid.Column="2"
+                            Margin="8,0,0,0"
+                            Orientation="Horizontal"
+                            VerticalAlignment="Center">
+                    <CheckBox Margin="0,0,12,0"
+                              IsEnabled="False"
+                              Content="正则" />
+                    <TextBlock FontSize="11"
+                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                               Text="复制失败: 0   名称超时: 0" />
+                </StackPanel>
+            </Grid>
+        </Border>
+        <controls:PanelProcessOverlay Grid.Row="0"
+                                      Grid.RowSpan="3" />
+    </Grid>
+</UserControl>

@@ -1,0 +1,309 @@
+<UserControl x:Class="DogeDebugger.UI.Views.Panels.LuaScriptView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:avalonEdit="http://icsharpcode.net/sharpdevelop/avalonedit"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             xmlns:panels="clr-namespace:DogeDebugger.UI.Views.Panels">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" MinHeight="180" />
+            <RowDefinition Height="4" />
+            <RowDefinition Height="170" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0"
+                Padding="6,4"
+                BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                BorderThickness="0,0,0,1">
+            <DockPanel LastChildFill="True">
+                <TextBlock DockPanel.Dock="Right"
+                           Margin="8,0,0,0"
+                           VerticalAlignment="Center"
+                           FontSize="11"
+                           Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                           Text="{Binding LuaStatusText}" />
+                <StackPanel Orientation="Horizontal">
+                    <ui:Button Appearance="Primary"
+                               Padding="9,4"
+                               Margin="0,0,4,0"
+                               Command="{Binding RunLuaCommand}"
+                               ToolTip="运行 (Ctrl+Shift+F11)">
+                        <ui:Button.Icon>
+                            <ui:SymbolIcon Symbol="Play24"
+                                           Filled="False"
+                                           FontSize="14" />
+                        </ui:Button.Icon>
+                        运行
+                    </ui:Button>
+                    <ui:Button Padding="9,4"
+                               Margin="0,0,4,0"
+                               Command="{Binding StopLuaCommand}"
+                               ToolTip="停止 (Ctrl+Shift+F12)">
+                        <ui:Button.Icon>
+                            <ui:SymbolIcon Symbol="Stop24"
+                                           Filled="False"
+                                           FontSize="14" />
+                        </ui:Button.Icon>
+                        停止
+                    </ui:Button>
+                    <ui:Button Padding="9,4"
+                               Margin="0,0,4,0"
+                               Click="OnRunSelectionClick">
+                        <ui:Button.Icon>
+                            <ui:SymbolIcon Symbol="Play24"
+                                           Filled="False"
+                                           FontSize="14" />
+                        </ui:Button.Icon>
+                        选区
+                    </ui:Button>
+                    <ui:Button Padding="9,4"
+                               Margin="0,0,4,0"
+                               Command="{Binding CheckLuaCommand}">
+                        <ui:Button.Icon>
+                            <ui:SymbolIcon Symbol="DocumentBulletList24"
+                                           Filled="False"
+                                           FontSize="14" />
+                        </ui:Button.Icon>
+                        检查
+                    </ui:Button>
+                    <Rectangle Width="1"
+                               Margin="4,2,8,2"
+                               Fill="{DynamicResource ControlStrokeColorDefaultBrush}" />
+                    <ui:Button Padding="9,4"
+                               Margin="0,0,4,0"
+                               Command="{Binding OpenLuaCommand}">
+                        <ui:Button.Icon>
+                            <ui:SymbolIcon Symbol="FolderOpen24"
+                                           Filled="False"
+                                           FontSize="14" />
+                        </ui:Button.Icon>
+                        打开
+                    </ui:Button>
+                    <ui:Button Padding="9,4"
+                               Margin="0,0,4,0"
+                               Command="{Binding SaveLuaCommand}">
+                        <ui:Button.Icon>
+                            <ui:SymbolIcon Symbol="Save24"
+                                           Filled="False"
+                                           FontSize="14" />
+                        </ui:Button.Icon>
+                        保存
+                    </ui:Button>
+                    <ui:Button Padding="9,4"
+                               Margin="0,0,4,0"
+                               Command="{Binding SaveLuaAsCommand}">
+                        <ui:Button.Icon>
+                            <ui:SymbolIcon Symbol="SaveCopy24"
+                                           Filled="False"
+                                           FontSize="14" />
+                        </ui:Button.Icon>
+                        另存为
+                    </ui:Button>
+                    <ui:Button Padding="9,4"
+                               Margin="0,0,4,0"
+                               Command="{Binding ResetLuaCommand}"
+                               ToolTip="重置 Lua 引擎和运行状态">
+                        <ui:Button.Icon>
+                            <ui:SymbolIcon Symbol="ArrowCounterclockwise24"
+                                           Filled="False"
+                                           FontSize="14" />
+                        </ui:Button.Icon>
+                        重置
+                    </ui:Button>
+                    <ui:Button Padding="9,4"
+                               Command="{Binding ClearLuaCommand}">
+                        <ui:Button.Icon>
+                            <ui:SymbolIcon Symbol="Delete24"
+                                           Filled="False"
+                                           FontSize="14" />
+                        </ui:Button.Icon>
+                        清空
+                    </ui:Button>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" MinWidth="360" />
+                <ColumnDefinition Width="4" />
+                <ColumnDefinition Width="278" />
+            </Grid.ColumnDefinitions>
+            <avalonEdit:TextEditor x:Name="ScriptEditor"
+                                   Grid.Column="0"
+                                   SyntaxHighlighting="SharpLua"
+                                   WordWrap="False"
+                                   ShowLineNumbers="True"
+                                   HorizontalScrollBarVisibility="Auto"
+                                   VerticalScrollBarVisibility="Auto"
+                                   FontFamily="{DynamicResource AppCodeFontFamily}"
+                                   FontSize="12" />
+            <GridSplitter Grid.Column="1"
+                          Width="4"
+                          HorizontalAlignment="Stretch"
+                          Background="{DynamicResource ControlStrokeColorDefaultBrush}" />
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <TextBlock Margin="6,4"
+                           FontWeight="SemiBold"
+                           Text="Lua接口(双击插入)" />
+                <ListBox x:Name="ApiListBox"
+                         Grid.Row="1"
+                         Margin="4,0,4,4"
+                         Background="Transparent"
+                         ItemsSource="{Binding LuaApiEntries}"
+                         MouseDoubleClick="OnApiListMouseDoubleClick"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate DataType="{x:Type panels:LuaApiEntry}">
+                            <Grid Margin="2,1">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0"
+                                           FontFamily="{DynamicResource AppCodeFontFamily}"
+                                           FontSize="11"
+                                           Text="{Binding Name}"
+                                           TextTrimming="CharacterEllipsis"
+                                           ToolTip="{Binding Description}" />
+                                <TextBlock Grid.Column="1"
+                                           Margin="6,0,0,0"
+                                           FontSize="10"
+                                           Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                           Text="{Binding Category}" />
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+                <TextBlock Grid.Row="2"
+                           Margin="6,4"
+                           MaxHeight="72"
+                           FontSize="11"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                           Text="{Binding SelectedItem.Description, ElementName=ApiListBox}"
+                           TextWrapping="Wrap" />
+            </Grid>
+        </Grid>
+
+        <GridSplitter Grid.Row="2"
+                      Height="4"
+                      HorizontalAlignment="Stretch"
+                      Background="{DynamicResource ControlStrokeColorDefaultBrush}" />
+
+        <TabControl Grid.Row="3"
+                    Margin="4,2,4,0">
+            <TabItem Header="输出">
+                <TextBox Text="{Binding LuaOutputText}"
+                         IsReadOnly="True"
+                         AcceptsReturn="True"
+                         VerticalScrollBarVisibility="Auto"
+                         HorizontalScrollBarVisibility="Auto"
+                         FontFamily="{DynamicResource AppCodeFontFamily}"
+                         FontSize="12" />
+            </TabItem>
+            <TabItem Header="问题">
+                <TextBox Text="{Binding LuaProblemsText}"
+                         IsReadOnly="True"
+                         AcceptsReturn="True"
+                         VerticalScrollBarVisibility="Auto"
+                         HorizontalScrollBarVisibility="Auto"
+                         FontFamily="{DynamicResource AppCodeFontFamily}"
+                         FontSize="12" />
+            </TabItem>
+            <TabItem Header="AI 生成">
+                <Grid Margin="4">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="320" MinWidth="260" />
+                        <ColumnDefinition Width="4" />
+                        <ColumnDefinition Width="*" MinWidth="320" />
+                    </Grid.ColumnDefinitions>
+                    <Grid Grid.Column="0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <DockPanel Margin="0,0,0,6">
+                            <TextBlock DockPanel.Dock="Left"
+                                       VerticalAlignment="Center"
+                                       FontWeight="SemiBold"
+                                       Text="需求" />
+                            <TextBlock DockPanel.Dock="Right"
+                                       Margin="8,0,0,0"
+                                       VerticalAlignment="Center"
+                                       FontSize="11"
+                                       Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                       Text="{Binding LuaAiStatusText}"
+                                       TextTrimming="CharacterEllipsis" />
+                        </DockPanel>
+                        <TextBox Grid.Row="1"
+                                 Text="{Binding LuaAiRequirement, UpdateSourceTrigger=PropertyChanged}"
+                                 AcceptsReturn="True"
+                                 TextWrapping="Wrap"
+                                 VerticalScrollBarVisibility="Auto" />
+                        <ui:Button Grid.Row="2"
+                                   Margin="0,6,0,0"
+                                   HorizontalAlignment="Right"
+                                   Padding="12,5"
+                                   Appearance="Primary"
+                                   Command="{Binding GenerateLuaPreviewCommand}"
+                                   Content="生成预览" />
+                    </Grid>
+                    <GridSplitter Grid.Column="1"
+                                  Width="4"
+                                  HorizontalAlignment="Stretch"
+                                  Background="{DynamicResource ControlStrokeColorDefaultBrush}" />
+                    <Grid Grid.Column="2">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <TextBlock Margin="0,0,0,6"
+                                   FontWeight="SemiBold"
+                                   Text="生成预览" />
+                        <TextBox Grid.Row="1"
+                                 Text="{Binding LuaAiPreview}"
+                                 IsReadOnly="True"
+                                 AcceptsReturn="True"
+                                 TextWrapping="NoWrap"
+                                 HorizontalScrollBarVisibility="Auto"
+                                 VerticalScrollBarVisibility="Auto"
+                                 FontFamily="{DynamicResource AppCodeFontFamily}"
+                                 FontSize="12" />
+                    </Grid>
+                </Grid>
+            </TabItem>
+        </TabControl>
+
+        <Border Grid.Row="4"
+                Padding="6,3"
+                BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                BorderThickness="0,1,0,0">
+            <DockPanel LastChildFill="True">
+                <TextBlock DockPanel.Dock="Right"
+                           FontSize="11"
+                           Foreground="{DynamicResource TextFillColorTertiaryBrush}">
+                    <Run Text="问题: " />
+                    <Run Text="{Binding LuaProblemCount, Mode=OneWay}" />
+                </TextBlock>
+                <TextBlock FontSize="11"
+                           Foreground="{DynamicResource TextFillColorTertiaryBrush}">
+                    <Run Text="{Binding LuaScriptPath, Mode=OneWay}" />
+                    <Run Text="  Ln " />
+                    <Run Text="{Binding LuaCaretLine, Mode=OneWay}" />
+                    <Run Text=", Col " />
+                    <Run Text="{Binding LuaCaretColumn, Mode=OneWay}" />
+                    <Run Text="  " />
+                    <Run Text="{Binding LuaStatusText, Mode=OneWay}" />
+                </TextBlock>
+            </DockPanel>
+        </Border>
+    </Grid>
+</UserControl>

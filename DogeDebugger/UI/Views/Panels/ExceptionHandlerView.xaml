@@ -1,0 +1,199 @@
+<UserControl x:Class="DogeDebugger.UI.Views.Panels.ExceptionHandlerView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             xmlns:controls="clr-namespace:DogeDebugger.UI.Controls">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0"
+                Padding="6,3"
+                BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                BorderThickness="0,0,0,1">
+            <DockPanel>
+                <ui:Button Appearance="Primary"
+                           FontSize="11"
+                           Padding="10,3"
+                           DockPanel.Dock="Right"
+                           Command="{Binding RefreshExceptionHandlersCommand}">
+                    <StackPanel Orientation="Horizontal">
+                        <ui:SymbolIcon Symbol="ArrowSync24"
+                                       Margin="0,0,5,0" />
+                        <TextBlock Text="重新扫描" />
+                    </StackPanel>
+                </ui:Button>
+                <TextBlock VerticalAlignment="Center"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                           Text="{Binding ExceptionHandlerStatusText}" />
+            </DockPanel>
+        </Border>
+
+        <TabControl Grid.Row="1">
+            <TabItem Header="VEH / VCH">
+                <DataGrid ItemsSource="{Binding VehEntries}"
+                          AutoGenerateColumns="False"
+                          IsReadOnly="True"
+                          CanUserAddRows="False"
+                          CanUserDeleteRows="False"
+                          HeadersVisibility="Column"
+                          ColumnHeaderHeight="32"
+                          GridLinesVisibility="Horizontal"
+                          BorderThickness="0"
+                          Background="Transparent"
+                          EnableRowVirtualization="True"
+                          VirtualizingPanel.IsVirtualizing="True">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="#"
+                                            Width="44"
+                                            Binding="{Binding Index}" />
+                        <DataGridTextColumn Header="类型"
+                                            Width="70"
+                                            Binding="{Binding TypeName}" />
+                        <DataGridTextColumn Header="节点"
+                                            Width="150"
+                                            Binding="{Binding DisplayNodeAddress}" />
+                        <DataGridTextColumn Header="编码指针"
+                                            Width="150"
+                                            Binding="{Binding DisplayEncodedPointer}" />
+                        <DataGridTextColumn Header="处理函数"
+                                            Width="150"
+                                            Binding="{Binding DisplayDecodedAddress}" />
+                        <DataGridTextColumn Header="模块"
+                                            Width="120"
+                                            Binding="{Binding ModuleName}" />
+                        <DataGridTextColumn Header="符号"
+                                            Width="260"
+                                            Binding="{Binding SymbolName}" />
+                    </DataGrid.Columns>
+                </DataGrid>
+            </TabItem>
+            <TabItem Header="SEH / .pdata">
+                <DataGrid ItemsSource="{Binding PdataEntries}"
+                          AutoGenerateColumns="False"
+                          IsReadOnly="True"
+                          CanUserAddRows="False"
+                          CanUserDeleteRows="False"
+                          HeadersVisibility="Column"
+                          ColumnHeaderHeight="32"
+                          GridLinesVisibility="Horizontal"
+                          BorderThickness="0"
+                          Background="Transparent"
+                          EnableRowVirtualization="True"
+                          VirtualizingPanel.IsVirtualizing="True">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="#"
+                                            Width="44"
+                                            Binding="{Binding Index}" />
+                        <DataGridTextColumn Header="模块"
+                                            Width="120"
+                                            Binding="{Binding ModuleName}" />
+                        <DataGridTextColumn Header="函数范围"
+                                            Width="220"
+                                            Binding="{Binding DisplayFunctionRange}" />
+                        <DataGridTextColumn Header="处理函数"
+                                            Width="150"
+                                            Binding="{Binding DisplayHandler}" />
+                        <DataGridTextColumn Header="符号"
+                                            Width="240"
+                                            Binding="{Binding HandlerSymbol}" />
+                        <DataGridTextColumn Header="标志"
+                                            Width="140"
+                                            Binding="{Binding FlagNames}" />
+                    </DataGrid.Columns>
+                </DataGrid>
+            </TabItem>
+            <TabItem Header="Hook 检测">
+                <DataGrid ItemsSource="{Binding HookEntries}"
+                          AutoGenerateColumns="False"
+                          IsReadOnly="True"
+                          CanUserAddRows="False"
+                          CanUserDeleteRows="False"
+                          HeadersVisibility="Column"
+                          ColumnHeaderHeight="32"
+                          GridLinesVisibility="Horizontal"
+                          BorderThickness="0"
+                          Background="Transparent"
+                          EnableRowVirtualization="True"
+                          VirtualizingPanel.IsVirtualizing="True">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="函数"
+                                            Width="190"
+                                            Binding="{Binding FunctionName}" />
+                        <DataGridTextColumn Header="地址"
+                                            Width="150"
+                                            Binding="{Binding DisplayAddress}" />
+                        <DataGridTextColumn Header="预期"
+                                            Width="100"
+                                            Binding="{Binding ExpectedInstruction}" />
+                        <DataGridTextColumn Header="实际"
+                                            Width="220"
+                                            Binding="{Binding ActualInstruction}" />
+                        <DataGridTextColumn Header="字节"
+                                            Width="150"
+                                            Binding="{Binding ActualBytes}" />
+                        <DataGridTextColumn Header="状态"
+                                            Width="120"
+                                            Binding="{Binding Status}" />
+                    </DataGrid.Columns>
+                </DataGrid>
+            </TabItem>
+        </TabControl>
+
+        <Border Grid.Row="2"
+                Padding="8,3"
+                BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                BorderThickness="0,1,0,0"
+                Background="{DynamicResource SubtleFillColorSecondaryBrush}">
+            <TextBlock FontSize="11"
+                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                       Text="{Binding ExceptionHandlerStatusText}" />
+        </Border>
+
+        <controls:PanelProcessOverlay Grid.Row="0"
+                                      Grid.RowSpan="3" />
+
+        <Border Grid.Row="0"
+                Grid.RowSpan="3"
+                Panel.ZIndex="19"
+                Background="{DynamicResource SolidBackgroundFillColorBaseBrush}">
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                    <Style.Triggers>
+                        <MultiDataTrigger>
+                            <MultiDataTrigger.Conditions>
+                                <Condition Binding="{Binding IsTargetOpen}" Value="True" />
+                                <Condition Binding="{Binding HasExceptionHandlerResult}" Value="False" />
+                            </MultiDataTrigger.Conditions>
+                            <Setter Property="Visibility" Value="Visible" />
+                        </MultiDataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
+            <StackPanel HorizontalAlignment="Center"
+                        VerticalAlignment="Center">
+                <ui:SymbolIcon Symbol="ArrowDownload24"
+                               FontSize="40"
+                               Margin="0,0,0,10"
+                               Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                <TextBlock HorizontalAlignment="Center"
+                           Text="{Binding ExceptionHandlerStatusText}" />
+                <ProgressBar Width="320"
+                             Height="4"
+                             Margin="0,12,0,12"
+                             Minimum="0"
+                             Maximum="1"
+                             IsIndeterminate="{Binding IsExceptionHandlerScanning}" />
+                <ui:Button Appearance="Primary"
+                           Padding="12,5"
+                           HorizontalAlignment="Center"
+                           Command="{Binding RefreshExceptionHandlersCommand}"
+                           Content="重试" />
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

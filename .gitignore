@@ -1,0 +1,38 @@
+# Visual Studio / .NET
+**/bin/
+**/obj/
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.VC.db
+*.VC.opendb
+
+# Runtime and generated data
+Saved/
+Plugins/*.dll
+Plugins/*.pdb
+*.log
+*.dmp
+*.tmp
+*.bak
+*.cache
+
+# Test and analysis output
+TestResults/
+coverage/
+*.coverage
+*.trx
+
+# Local settings and secrets
+settings.json
+shortcuts.json
+*.secrets.json
+.env
+.env.*
+
+# OS metadata
+Thumbs.db
+Desktop.ini
+.DS_Store

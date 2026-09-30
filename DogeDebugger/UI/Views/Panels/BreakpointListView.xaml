@@ -1,0 +1,176 @@
+<UserControl x:Class="DogeDebugger.UI.Views.Panels.BreakpointListView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="5" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0"
+                Padding="4,3"
+                BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                BorderThickness="0,0,0,1">
+            <StackPanel Orientation="Horizontal">
+                <ui:Button Appearance="Secondary"
+                           FontSize="12"
+                           Padding="8,4"
+                           Command="{Binding ClearBreakpointsCommand}">
+                    <StackPanel Orientation="Horizontal">
+                        <ui:SymbolIcon Symbol="Delete24"
+                                       Margin="0,0,5,0" />
+                        <TextBlock Text="清除全部" />
+                    </StackPanel>
+                </ui:Button>
+            </StackPanel>
+        </Border>
+
+        <DataGrid x:Name="BreakpointGrid"
+                  Grid.Row="1"
+                  ItemsSource="{Binding Breakpoints}"
+                  SelectedItem="{Binding SelectedBreakpoint}"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="False"
+                  CanUserAddRows="False"
+                  CanUserDeleteRows="False"
+                  SelectionMode="Single"
+                  CanUserSortColumns="True"
+                  HeadersVisibility="Column"
+                  ColumnHeaderHeight="32"
+                  GridLinesVisibility="Horizontal"
+                  EnableRowVirtualization="True"
+                  VirtualizingPanel.IsVirtualizing="True"
+                  VirtualizingPanel.VirtualizationMode="Recycling"
+                  Background="Transparent"
+                  BorderThickness="0"
+                  FontFamily="Cascadia Code, Consolas, monospace"
+                  FontSize="12"
+                  MouseDoubleClick="OnBreakpointGridDoubleClick">
+            <DataGrid.RowStyle>
+                <Style TargetType="DataGridRow">
+                    <Setter Property="Foreground" Value="#E4000000" />
+                    <Setter Property="Background" Value="Transparent" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsEnabled}" Value="False">
+                            <Setter Property="Background"
+                                    Value="{DynamicResource SystemFillColorSuccessBackgroundBrush}" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </DataGrid.RowStyle>
+            <DataGrid.Columns>
+                <DataGridTemplateColumn Header="启用"
+                                        Width="54">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <CheckBox HorizontalAlignment="Center"
+                                      VerticalAlignment="Center"
+                                      IsChecked="{Binding IsEnabled, Mode=OneWay}"
+                                      Click="OnBreakpointEnabledClick" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTextColumn Header="类型"
+                                    Binding="{Binding KindText}"
+                                    Width="72" />
+                <DataGridTextColumn Header="地址"
+                                    Binding="{Binding AddressText}"
+                                    Width="150" />
+                <DataGridTextColumn Header="模块"
+                                    Binding="{Binding ModuleName}"
+                                    Width="130" />
+                <DataGridTextColumn Header="符号"
+                                    Binding="{Binding SymbolName}"
+                                    Width="160" />
+                <DataGridTextColumn Header="命中次数"
+                                    Binding="{Binding HitCount}"
+                                    Width="86" />
+                <DataGridTextColumn Header="条件MISS"
+                                    Binding="{Binding ConditionMissCount}"
+                                    Width="86" />
+                <DataGridTextColumn Header="条件"
+                                    Binding="{Binding Condition}"
+                                    Width="180" />
+                <DataGridTextColumn Header="备注"
+                                    Binding="{Binding Comment}"
+                                    Width="180" />
+            </DataGrid.Columns>
+            <DataGrid.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="跳转到反汇编"
+                              Click="OnGoToBreakpointClick" />
+                    <MenuItem Header="启用/禁用断点"
+                              Command="{Binding ToggleSelectedBreakpointCommand}" />
+                    <Separator />
+                    <MenuItem Header="删除断点"
+                              Command="{Binding RemoveSelectedBreakpointCommand}" />
+                    <MenuItem Header="清除全部断点"
+                              Command="{Binding ClearBreakpointsCommand}" />
+                </ContextMenu>
+            </DataGrid.ContextMenu>
+        </DataGrid>
+
+        <GridSplitter Grid.Row="2"
+                      Height="5"
+                      HorizontalAlignment="Stretch"
+                      Background="{DynamicResource ControlStrokeColorDefaultBrush}" />
+
+        <Border Grid.Row="3"
+                Padding="7,4"
+                BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                BorderThickness="0,1,0,1">
+            <TextBlock FontSize="12"
+                       FontWeight="SemiBold"
+                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                       Text="MCP 断点" />
+        </Border>
+
+        <DataGrid Grid.Row="4"
+                  ItemsSource="{Binding Breakpoints}"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="True"
+                  CanUserAddRows="False"
+                  CanUserDeleteRows="False"
+                  SelectionMode="Single"
+                  HeadersVisibility="Column"
+                  ColumnHeaderHeight="32"
+                  GridLinesVisibility="Horizontal"
+                  EnableRowVirtualization="True"
+                  VirtualizingPanel.IsVirtualizing="True"
+                  VirtualizingPanel.VirtualizationMode="Recycling"
+                  Background="Transparent"
+                  BorderThickness="0"
+                  FontFamily="Cascadia Code, Consolas, monospace"
+                  FontSize="12">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="ID"
+                                    Binding="{Binding AddressText}"
+                                    Width="54" />
+                <DataGridTextColumn Header="目标"
+                                    Binding="{Binding AddressText}"
+                                    Width="150" />
+                <DataGridTextColumn Header="类型"
+                                    Binding="{Binding KindText}"
+                                    Width="72" />
+                <DataGridTextColumn Header="模式"
+                                    Width="72" />
+                <DataGridTextColumn Header="条件/过滤"
+                                    Binding="{Binding Condition}"
+                                    Width="180" />
+                <DataGridTextColumn Header="状态"
+                                    Binding="{Binding StateText}"
+                                    Width="80" />
+                <DataGridTextColumn Header="命中"
+                                    Binding="{Binding HitCount}"
+                                    Width="70" />
+                <DataGridTextColumn Header="备注"
+                                    Binding="{Binding Comment}"
+                                    Width="240" />
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+</UserControl>

@@ -1,0 +1,184 @@
+<ui:FluentWindow x:Class="DogeDebugger.UI.Views.Dialogs.AiAssistantWindow"
+                 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                 xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+                 Title="AI 助手"
+                 Width="960"
+                 Height="720"
+                 MinWidth="720"
+                 MinHeight="540"
+                 WindowStartupLocation="CenterOwner"
+                 ExtendsContentIntoTitleBar="True"
+                 FontFamily="Cascadia Code, Consolas, monospace"
+                 FontSize="12">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="30" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <ui:TitleBar Grid.Row="0"
+                     Title="新对话"
+                     ShowMinimize="True"
+                     ShowMaximize="True"
+                     ShowClose="True" />
+
+        <Border Grid.Row="1"
+                Padding="8,5"
+                BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                BorderThickness="0,0,0,1">
+            <DockPanel>
+                <ui:Button DockPanel.Dock="Left"
+                           Appearance="Secondary"
+                           FontSize="11"
+                           Padding="9,3"
+                           Margin="0,0,4,0"
+                           Command="{Binding NewConversationCommand}">
+                    <StackPanel Orientation="Horizontal">
+                        <ui:SymbolIcon Symbol="Add24"
+                                       Margin="0,0,5,0" />
+                        <TextBlock Text="新对话" />
+                    </StackPanel>
+                </ui:Button>
+                <ui:Button DockPanel.Dock="Right"
+                           Appearance="Secondary"
+                           FontSize="11"
+                           Padding="9,3"
+                           Command="{Binding LoadModelsCommand}">
+                    <StackPanel Orientation="Horizontal">
+                        <ui:SymbolIcon Symbol="ArrowSync24"
+                                       Margin="0,0,5,0" />
+                        <TextBlock Text="刷新模型" />
+                    </StackPanel>
+                </ui:Button>
+                <ComboBox DockPanel.Dock="Right"
+                          Width="260"
+                          Height="28"
+                          Margin="0,0,4,0"
+                          ItemsSource="{Binding Models}"
+                          SelectedItem="{Binding SelectedModel}" />
+                <TextBlock VerticalAlignment="Center"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                           Text="{Binding StatusText}" />
+            </DockPanel>
+        </Border>
+
+        <ScrollViewer Grid.Row="2"
+                      VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled">
+            <ItemsControl ItemsSource="{Binding Messages}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Margin="16,8"
+                                Padding="12,9"
+                                MaxWidth="760"
+                                HorizontalAlignment="Stretch"
+                                Background="{DynamicResource SubtleFillColorSecondaryBrush}"
+                                BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                                BorderThickness="1"
+                                CornerRadius="6">
+                            <TextBlock Text="{Binding Content}"
+                                       TextWrapping="Wrap" />
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+
+        <Grid Grid.Row="2"
+              Panel.ZIndex="5"
+              Background="{DynamicResource SolidBackgroundFillColorBaseBrush}">
+            <Grid.Style>
+                <Style TargetType="Grid">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsEmpty}" Value="True">
+                            <Setter Property="Visibility" Value="Visible" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Grid.Style>
+            <StackPanel HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        MaxWidth="620">
+                <ui:SymbolIcon Symbol="Alert24"
+                               FontSize="38"
+                               Margin="0,0,0,10"
+                               Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                <TextBlock HorizontalAlignment="Center"
+                           FontSize="18"
+                           FontWeight="SemiBold"
+                           Text="开始和 AI 对话" />
+                <TextBlock Margin="0,7,0,0"
+                           HorizontalAlignment="Center"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                           Text="可以分析当前反汇编 / 选区，粘贴图片，或直接提问" />
+                <TextBlock Margin="0,14,0,0"
+                           HorizontalAlignment="Center"
+                           TextWrapping="Wrap"
+                           Text="{Binding ErrorText}"
+                           Visibility="{Binding HasError, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                <ui:Button Appearance="Primary"
+                           Margin="0,14,0,0"
+                           Padding="14,5"
+                           HorizontalAlignment="Center"
+                           Command="{Binding LoadModelsCommand}"
+                           Content="重试" />
+            </StackPanel>
+        </Grid>
+
+        <Border Grid.Row="3"
+                Padding="8"
+                BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                BorderThickness="0,1,0,0">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBox Grid.Column="0"
+                         MinHeight="72"
+                         MaxHeight="180"
+                         Padding="8,6"
+                         AcceptsReturn="True"
+                         TextWrapping="Wrap"
+                         VerticalScrollBarVisibility="Auto"
+                         Text="{Binding Prompt, UpdateSourceTrigger=PropertyChanged}" />
+                <ui:Button Grid.Column="1"
+                           Width="44"
+                           Height="34"
+                           Margin="6,0,0,0"
+                           Padding="0"
+                           VerticalAlignment="Bottom"
+                           IsEnabled="{Binding IsBusy}"
+                           Command="{Binding StopCommand}"
+                           ToolTip="停止">
+                    <ui:SymbolIcon Symbol="Stop24" />
+                </ui:Button>
+                <ui:Button Grid.Column="2"
+                           Width="44"
+                           Height="34"
+                           Margin="6,0,0,0"
+                           Padding="0"
+                           VerticalAlignment="Bottom"
+                           Appearance="Primary"
+                           Command="{Binding SendCommand}"
+                           ToolTip="发送">
+                    <ui:SymbolIcon Symbol="Send24" />
+                </ui:Button>
+            </Grid>
+        </Border>
+
+        <Border Grid.Row="4"
+                Padding="8,3"
+                Background="{DynamicResource SubtleFillColorSecondaryBrush}">
+            <TextBlock FontSize="11"
+                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                       Text="{Binding StatusText}" />
+        </Border>
+    </Grid>
+</ui:FluentWindow>

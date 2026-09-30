@@ -1,0 +1,340 @@
+<Window x:Class="DogeDebugger.UI.Views.Dialogs.DllInjectionWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+        Title="DLL 注入"
+        Width="760"
+        Height="445"
+        MinWidth="680"
+        SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False"
+        ResizeMode="NoResize"
+        Background="#FFFAFAFA">
+    <Grid Background="#FFFAFAFA"
+          Margin="18,14,18,16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0"
+              Margin="0,0,0,12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Border Grid.Column="0"
+                    Width="42"
+                    Height="42"
+                    Margin="0,0,12,0"
+                    CornerRadius="8"
+                    Background="{DynamicResource SystemAccentColorPrimaryBrush}">
+                <ui:SymbolIcon Symbol="PlugConnected24"
+                               FontSize="16"
+                               Foreground="White"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center" />
+            </Border>
+            <StackPanel Grid.Column="1"
+                        VerticalAlignment="Center">
+                <TextBlock FontSize="18"
+                           FontWeight="SemiBold"
+                           Text="DLL 注入" />
+                <TextBlock Margin="0,3,0,0"
+                           FontSize="12"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                           Text="加载模块、调用无参导出函数，或使用 DHS 执行字节注入。" />
+            </StackPanel>
+            <Border Grid.Column="2"
+                    Padding="10,4"
+                    VerticalAlignment="Center"
+                    CornerRadius="6"
+                    BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                    BorderThickness="1">
+                <TextBlock x:Name="DhsBadgeText"
+                           FontSize="12"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                           Text="DHS 未加载" />
+            </Border>
+        </Grid>
+
+        <Border Grid.Row="1"
+                Margin="0,0,0,10"
+                Padding="12"
+                CornerRadius="8"
+                BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                BorderThickness="1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0">
+                    <TextBlock Margin="0,0,0,4"
+                               FontWeight="SemiBold"
+                               Text="目标进程" />
+                    <TextBlock x:Name="TargetText"
+                               FontFamily="{DynamicResource AppCodeFontFamily}"
+                               FontSize="12"
+                               TextTrimming="CharacterEllipsis" />
+                    <TextBlock x:Name="TargetPathText"
+                               Margin="0,3,0,0"
+                               FontSize="11"
+                               Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                               TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+                <ui:Button Grid.Column="1"
+                           Margin="10,0,0,0"
+                           Padding="12,5"
+                           VerticalAlignment="Center"
+                           Appearance="Secondary"
+                           FontSize="12"
+                           Click="OnSelectTargetClick">
+                    <ui:Button.Icon>
+                        <ui:SymbolIcon Symbol="Search24"
+                                       Filled="False" />
+                    </ui:Button.Icon>
+                    选择
+                </ui:Button>
+                <ui:Button x:Name="ReselectProcessButton"
+                           Grid.Column="2"
+                           Margin="6,0,0,0"
+                           Padding="12,5"
+                           VerticalAlignment="Center"
+                           Appearance="Secondary"
+                           FontSize="12"
+                           Click="OnReselectTargetClick">
+                    <ui:Button.Icon>
+                        <ui:SymbolIcon Symbol="ArrowSync24"
+                                       Filled="False" />
+                    </ui:Button.Icon>
+                    重选
+                </ui:Button>
+            </Grid>
+        </Border>
+
+        <Border Grid.Row="2"
+                Margin="0,0,0,10"
+                Padding="12"
+                CornerRadius="8"
+                BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                BorderThickness="1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0"
+                           Grid.Column="0"
+                           Margin="0,0,10,0"
+                           VerticalAlignment="Center"
+                           FontWeight="SemiBold"
+                           Text="DLL 文件" />
+                <ui:TextBox x:Name="DllPathBox"
+                            Grid.Row="0"
+                            Grid.Column="1"
+                            Margin="0,0,8,0"
+                            FontFamily="{DynamicResource AppCodeFontFamily}"
+                            FontSize="12"
+                            IsReadOnly="True"
+                            PlaceholderText="选择要注入的 DLL 文件" />
+                <ui:Button Grid.Row="0"
+                           Grid.Column="2"
+                           Margin="0,0,6,0"
+                           Padding="12,5"
+                           Appearance="Secondary"
+                           FontSize="12"
+                           Click="OnBrowseDllClick">
+                    <ui:Button.Icon>
+                        <ui:SymbolIcon Symbol="FolderOpen24"
+                                       Filled="False" />
+                    </ui:Button.Icon>
+                    浏览
+                </ui:Button>
+                <TextBlock x:Name="DllArchText"
+                           Grid.Row="0"
+                           Grid.Column="3"
+                           MinWidth="42"
+                           VerticalAlignment="Center"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                           TextAlignment="Center" />
+
+                <TextBlock Grid.Row="1"
+                           Grid.Column="0"
+                           Margin="0,10,10,0"
+                           VerticalAlignment="Center"
+                           FontWeight="SemiBold"
+                           Text="导出函数" />
+                <ui:TextBox x:Name="ExportBox"
+                            Grid.Row="1"
+                            Grid.Column="1"
+                            Margin="0,10,8,0"
+                            FontFamily="{DynamicResource AppCodeFontFamily}"
+                            FontSize="12"
+                            IsReadOnly="True"
+                            Text="不调用导出 / DllMain" />
+                <ui:Button x:Name="SelectExportButton"
+                           Grid.Row="1"
+                           Grid.Column="2"
+                           Margin="0,10,6,0"
+                           Padding="12,5"
+                           IsEnabled="False"
+                           Appearance="Secondary"
+                           FontSize="12"
+                           Click="OnSelectExportClick">
+                    <ui:Button.Icon>
+                        <ui:SymbolIcon Symbol="Code24"
+                                       Filled="False" />
+                    </ui:Button.Icon>
+                    选择
+                </ui:Button>
+                <ui:Button x:Name="ClearExportButton"
+                           Grid.Row="1"
+                           Grid.Column="3"
+                           Margin="0,10,0,0"
+                           Padding="12,5"
+                           IsEnabled="False"
+                           Appearance="Secondary"
+                           FontSize="12"
+                           Click="OnClearExportClick">
+                    <ui:Button.Icon>
+                        <ui:SymbolIcon Symbol="Dismiss24"
+                                       Filled="False" />
+                    </ui:Button.Icon>
+                    清除
+                </ui:Button>
+            </Grid>
+        </Border>
+
+        <Border Grid.Row="3"
+                Margin="0,0,0,10"
+                Padding="12"
+                CornerRadius="8"
+                BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                BorderThickness="1">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <TextBlock Grid.Row="0"
+                           Margin="0,0,0,8"
+                           FontWeight="SemiBold"
+                           Text="注入模式" />
+                <Grid Grid.Row="1">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <RadioButton x:Name="ModeLoadLibraryRadio"
+                                 Grid.Column="0"
+                                 Margin="0,0,12,0"
+                                 GroupName="InjectionMode"
+                                 IsChecked="True">
+                        <StackPanel>
+                            <TextBlock FontWeight="SemiBold"
+                                       Text="模式一：常规注入" />
+                            <TextBlock Margin="0,2,0,0"
+                                       FontSize="11"
+                                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                       TextWrapping="Wrap"
+                                       Text="支持中文路径、无参导出调用和卸载。" />
+                        </StackPanel>
+                    </RadioButton>
+                    <RadioButton x:Name="ModeDhsRadio"
+                                 Grid.Column="1"
+                                 GroupName="InjectionMode"
+                                 IsEnabled="False">
+                        <StackPanel>
+                            <TextBlock FontWeight="SemiBold"
+                                       Text="模式二：特殊注入" />
+                            <TextBlock x:Name="DhsModeHintText"
+                                       Margin="0,2,0,0"
+                                       FontSize="11"
+                                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                       TextWrapping="Wrap"
+                                       Text="DHS 未加载，当前不可用。" />
+                        </StackPanel>
+                    </RadioButton>
+                </Grid>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="4">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0"
+                        Orientation="Horizontal"
+                        VerticalAlignment="Center">
+                <ProgressBar x:Name="BusyBar"
+                             Width="120"
+                             Height="8"
+                             Margin="0,0,10,0"
+                             IsIndeterminate="True"
+                             Visibility="Collapsed" />
+                <TextBlock x:Name="StatusText"
+                           VerticalAlignment="Center"
+                           FontSize="12"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                           Text="已使用当前进程作为目标，请选择 DLL。" />
+            </StackPanel>
+            <ui:Button x:Name="UnloadButton"
+                       Grid.Column="1"
+                       Margin="0,0,8,0"
+                       Padding="14,6"
+                       IsEnabled="False"
+                       Appearance="Caution"
+                       FontSize="12"
+                       Click="OnUnloadClick">
+                <ui:Button.Icon>
+                    <ui:SymbolIcon Symbol="Delete24"
+                                   Filled="False" />
+                </ui:Button.Icon>
+                卸载模块
+            </ui:Button>
+            <ui:Button x:Name="InjectButton"
+                       Grid.Column="2"
+                       Margin="0,0,8,0"
+                       Padding="14,6"
+                       IsEnabled="False"
+                       Appearance="Primary"
+                       FontSize="12"
+                       Click="OnInjectClick">
+                <ui:Button.Icon>
+                    <ui:SymbolIcon Symbol="PlugConnected24"
+                                   Filled="False" />
+                </ui:Button.Icon>
+                注入模块
+            </ui:Button>
+            <ui:Button Grid.Column="3"
+                       Padding="14,6"
+                       IsCancel="True"
+                       Appearance="Secondary"
+                       FontSize="12"
+                       Click="OnCloseClick">
+                <ui:Button.Icon>
+                    <ui:SymbolIcon Symbol="Dismiss24"
+                                   Filled="False" />
+                </ui:Button.Icon>
+                关闭
+            </ui:Button>
+        </Grid>
+    </Grid>
+</Window>

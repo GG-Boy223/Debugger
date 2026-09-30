@@ -1,0 +1,34 @@
+<ui:FluentWindow x:Class="DogeDebugger.UI.Views.Dialogs.CacheManagerWindow"
+                 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                 xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+                 Title="缓存管理器"
+                 Width="780"
+                 MinWidth="560"
+                 Height="540"
+                 MinHeight="380"
+                 WindowStartupLocation="CenterOwner"
+                 ShowInTaskbar="False"
+                 Background="#FFFAFAFA"
+                 Foreground="#E4000000"
+                 FontFamily="{DynamicResource AppUiFontFamily}"
+                 FontSize="{DynamicResource AppUiFontSize}">
+    <TabControl Margin="8"
+                ItemsSource="{Binding Tabs}"
+                SelectedItem="{Binding SelectedTab}">
+        <TabControl.ItemTemplate>
+            <DataTemplate>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="{Binding Header}" />
+                    <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                               Text="{Binding Count}" />
+                </StackPanel>
+            </DataTemplate>
+        </TabControl.ItemTemplate>
+        <TabControl.ContentTemplate>
+            <DataTemplate>
+                <ContentControl Content="{Binding View}" />
+            </DataTemplate>
+        </TabControl.ContentTemplate>
+    </TabControl>
+</ui:FluentWindow>

@@ -1,0 +1,148 @@
+<UserControl x:Class="DogeDebugger.UI.Views.Panels.ThreadListView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             xmlns:controls="clr-namespace:DogeDebugger.UI.Controls">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0"
+                Padding="6,3"
+                BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                BorderThickness="0,0,0,1">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Left"
+                            Orientation="Horizontal">
+                    <ui:Button Appearance="Primary"
+                               FontSize="11"
+                               Padding="10,3"
+                               Margin="0,0,4,0"
+                               Command="{Binding RefreshTargetPanelsCommand}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="ArrowSync24"
+                                           Margin="0,0,5,0" />
+                            <TextBlock Text="刷新" />
+                        </StackPanel>
+                    </ui:Button>
+                    <ui:Button Appearance="Secondary"
+                               FontSize="11"
+                               Padding="10,3"
+                               Margin="0,0,4,0"
+                               Command="{Binding SuspendSelectedThreadCommand}"
+                               Content="挂起线程" />
+                    <ui:Button Appearance="Secondary"
+                               FontSize="11"
+                               Padding="10,3"
+                               Margin="0,0,4,0"
+                               Command="{Binding ResumeSelectedThreadCommand}"
+                               Content="恢复线程" />
+                    <ui:Button Appearance="Secondary"
+                               FontSize="11"
+                               Padding="10,3"
+                               Command="{Binding OpenSelectedThreadCommand}"
+                               Content="跳转到入口点" />
+                </StackPanel>
+                <TextBlock DockPanel.Dock="Right"
+                           HorizontalAlignment="Right"
+                           VerticalAlignment="Center"
+                           FontSize="11"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}">
+                    <Run Text="线程数: " />
+                    <Run FontWeight="SemiBold"
+                         Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                         Text="{Binding Threads.Count, Mode=OneWay}" />
+                </TextBlock>
+                <Border />
+            </DockPanel>
+        </Border>
+
+        <Border Grid.Row="1"
+                Padding="8,2"
+                BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                BorderThickness="0,0,0,1"
+                Background="{DynamicResource SubtleFillColorSecondaryBrush}">
+            <TextBlock FontSize="11"
+                       Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                       Text="右键线程可执行挂起/恢复操作" />
+        </Border>
+
+        <DataGrid x:Name="ThreadGrid"
+                  Grid.Row="2"
+                  ItemsSource="{Binding Threads}"
+                  SelectedItem="{Binding SelectedThread}"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="True"
+                  CanUserAddRows="False"
+                  CanUserDeleteRows="False"
+                  CanUserSortColumns="True"
+                  HeadersVisibility="Column"
+                  ColumnHeaderHeight="32"
+                  GridLinesVisibility="Horizontal"
+                  EnableRowVirtualization="True"
+                  VirtualizingPanel.IsVirtualizing="True"
+                  VirtualizingPanel.VirtualizationMode="Recycling"
+                  BorderThickness="0"
+                  Background="Transparent"
+                  FontFamily="Cascadia Code, Consolas, monospace"
+                  FontSize="12"
+                  MouseDoubleClick="OnThreadGridDoubleClick">
+            <DataGrid.RowStyle>
+                <Style TargetType="DataGridRow">
+                    <Setter Property="Foreground" Value="#E4000000" />
+                    <Setter Property="Background" Value="Transparent" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding SuspendCount}" Value="0">
+                            <Setter Property="Foreground"
+                                    Value="{DynamicResource TextFillColorPrimaryBrush}" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </DataGrid.RowStyle>
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="线程ID"
+                                    Binding="{Binding ThreadId}"
+                                    Width="80" />
+                <DataGridTextColumn Header="名称"
+                                    Binding="{Binding Name}"
+                                    Width="220" />
+                <DataGridTextColumn Header="TEB"
+                                    Binding="{Binding TebBaseAddressText}"
+                                    Width="150" />
+                <DataGridTextColumn Header="起始地址"
+                                    Binding="{Binding StartAddressText}"
+                                    Width="80" />
+                <DataGridTextColumn Header="挂起计数"
+                                    Binding="{Binding SuspendCountText}"
+                                    Width="80" />
+                <DataGridTextColumn Header="状态"
+                                    Width="80" />
+                <DataGridTextColumn Header="优先级"
+                                    Binding="{Binding BasePriorityText}"
+                                    Width="80" />
+                <DataGridTextColumn Header="当前指令"
+                                    Binding="{Binding InstructionPointerText}"
+                                    Width="*" />
+            </DataGrid.Columns>
+            <DataGrid.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="跳转到入口点"
+                              Command="{Binding OpenSelectedThreadCommand}" />
+                    <Separator />
+                    <MenuItem Header="挂起线程"
+                              Command="{Binding SuspendSelectedThreadCommand}" />
+                    <MenuItem Header="恢复线程"
+                              Command="{Binding ResumeSelectedThreadCommand}" />
+                    <Separator />
+                    <MenuItem Header="刷新"
+                              Command="{Binding RefreshTargetPanelsCommand}" />
+                </ContextMenu>
+            </DataGrid.ContextMenu>
+        </DataGrid>
+        <controls:PanelProcessOverlay Grid.Row="0"
+                                      Grid.RowSpan="3" />
+    </Grid>
+</UserControl>

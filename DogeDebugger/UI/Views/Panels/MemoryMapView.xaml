@@ -1,0 +1,260 @@
+<UserControl x:Class="DogeDebugger.UI.Views.Panels.MemoryMapView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             xmlns:controls="clr-namespace:DogeDebugger.UI.Controls">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0"
+                Padding="6,4"
+                BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                BorderThickness="0,0,0,1">
+            <DockPanel LastChildFill="True">
+                <StackPanel DockPanel.Dock="Left"
+                            Orientation="Horizontal">
+                    <ui:Button Appearance="Primary"
+                               FontSize="11"
+                               Padding="8,3"
+                               Command="{Binding RefreshTargetPanelsCommand}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="ArrowSync24"
+                                           Margin="0,0,5,0" />
+                            <TextBlock Text="刷新" />
+                        </StackPanel>
+                    </ui:Button>
+                    <Separator Margin="7,2" />
+                    <CheckBox x:Name="GroupByModuleCheck"
+                              IsChecked="True"
+                              Margin="0,0,8,0"
+                              VerticalAlignment="Center"
+                              Checked="OnFilterChanged"
+                              Unchecked="OnFilterChanged">
+                        按模块分组
+                    </CheckBox>
+                </StackPanel>
+                <StackPanel DockPanel.Dock="Right"
+                            Orientation="Horizontal">
+                    <TextBlock Margin="0,0,6,0"
+                               VerticalAlignment="Center"
+                               FontSize="11"
+                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                               Text="搜索:" />
+                    <TextBox x:Name="SearchTextBox"
+                             Width="200"
+                             Height="26"
+                             Padding="6,2"
+                             FontFamily="Cascadia Code, Consolas, monospace"
+                             FontSize="11"
+                             TextChanged="OnFilterChanged" />
+                </StackPanel>
+                <Border />
+            </DockPanel>
+        </Border>
+
+        <Border Grid.Row="1"
+                Padding="6,3"
+                BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                BorderThickness="0,0,0,1"
+                Background="{DynamicResource SubtleFillColorSecondaryBrush}">
+            <WrapPanel>
+                <TextBlock Margin="0,0,5,0"
+                           VerticalAlignment="Center"
+                           FontWeight="SemiBold"
+                           FontSize="11"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                           Text="状态:" />
+                <CheckBox x:Name="CommitCheck"
+                          Content="Commit"
+                          IsChecked="True"
+                          Margin="0,0,4,0"
+                          Checked="OnFilterChanged"
+                          Unchecked="OnFilterChanged" />
+                <CheckBox x:Name="ReserveCheck"
+                          Content="Reserve"
+                          IsChecked="True"
+                          Margin="0,0,4,0"
+                          Checked="OnFilterChanged"
+                          Unchecked="OnFilterChanged" />
+                <CheckBox x:Name="FreeCheck"
+                          Content="Free"
+                          Margin="0,0,8,0"
+                          Checked="OnFilterChanged"
+                          Unchecked="OnFilterChanged" />
+                <Separator Margin="2,1,7,1" />
+                <TextBlock Margin="0,0,5,0"
+                           VerticalAlignment="Center"
+                           FontWeight="SemiBold"
+                           FontSize="11"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                           Text="类型:" />
+                <CheckBox x:Name="ImageCheck"
+                          Content="Image"
+                          IsChecked="True"
+                          Margin="0,0,4,0"
+                          Checked="OnFilterChanged"
+                          Unchecked="OnFilterChanged" />
+                <CheckBox x:Name="MappedCheck"
+                          Content="Mapped"
+                          IsChecked="True"
+                          Margin="0,0,4,0"
+                          Checked="OnFilterChanged"
+                          Unchecked="OnFilterChanged" />
+                <CheckBox x:Name="PrivateCheck"
+                          Content="Private"
+                          IsChecked="True"
+                          Checked="OnFilterChanged"
+                          Unchecked="OnFilterChanged" />
+            </WrapPanel>
+        </Border>
+
+        <DataGrid x:Name="RegionGrid"
+                  Grid.Row="2"
+                  ItemsSource="{Binding MemoryRegions}"
+                  SelectedItem="{Binding SelectedMemoryRegion}"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="True"
+                  CanUserAddRows="False"
+                  CanUserDeleteRows="False"
+                  CanUserSortColumns="True"
+                  HeadersVisibility="Column"
+                  ColumnHeaderHeight="32"
+                  GridLinesVisibility="Horizontal"
+                  EnableRowVirtualization="True"
+                  VirtualizingPanel.IsVirtualizing="True"
+                  VirtualizingPanel.VirtualizationMode="Recycling"
+                  BorderThickness="0"
+                  Background="Transparent"
+                  Foreground="#E4000000"
+                  FontFamily="Cascadia Code, Consolas, monospace"
+                  FontSize="12"
+                  MouseDoubleClick="OnRegionGridDoubleClick">
+            <DataGrid.Resources>
+                <Style x:Key="RegionCellText"
+                       TargetType="TextBlock">
+                    <Setter Property="Foreground" Value="#E4000000" />
+                    <Setter Property="VerticalAlignment" Value="Center" />
+                    <Setter Property="TextTrimming" Value="None" />
+                </Style>
+            </DataGrid.Resources>
+            <DataGrid.GroupStyle>
+                <GroupStyle>
+                    <GroupStyle.HeaderTemplate>
+                        <DataTemplate>
+                            <Border Padding="5,2"
+                                    Background="{DynamicResource SubtleFillColorTertiaryBrush}">
+                                <TextBlock FontWeight="SemiBold"
+                                           Text="{Binding Name}" />
+                            </Border>
+                        </DataTemplate>
+                    </GroupStyle.HeaderTemplate>
+                </GroupStyle>
+            </DataGrid.GroupStyle>
+            <DataGrid.RowStyle>
+                <Style TargetType="DataGridRow">
+                    <Setter Property="Foreground" Value="#E4000000" />
+                    <Setter Property="Background" Value="Transparent" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsModuleHeader}" Value="True">
+                            <Setter Property="FontWeight" Value="SemiBold" />
+                            <Setter Property="Background"
+                                    Value="{DynamicResource SubtleFillColorTertiaryBrush}" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding StateText}" Value="Free">
+                            <Setter Property="Foreground"
+                                    Value="{DynamicResource TextFillColorTertiaryBrush}" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding TypeText}" Value="Image">
+                            <Setter Property="Foreground" Value="#FF2070C0" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </DataGrid.RowStyle>
+            <DataGrid.ColumnHeaderStyle>
+                <Style TargetType="DataGridColumnHeader">
+                    <Setter Property="Foreground" Value="#E4000000" />
+                    <Setter Property="Background" Value="#FFF3F3F3" />
+                    <Setter Property="FontWeight" Value="SemiBold" />
+                </Style>
+            </DataGrid.ColumnHeaderStyle>
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="地址"
+                                    Binding="{Binding BaseAddressText}"
+                                    ElementStyle="{StaticResource RegionCellText}"
+                                    MinWidth="118"
+                                    Width="118" />
+                <DataGridTextColumn Header="分配保护"
+                                    Binding="{Binding AllocationBaseText}"
+                                    ElementStyle="{StaticResource RegionCellText}"
+                                    MinWidth="118"
+                                    Width="118" />
+                <DataGridTextColumn Header="状态"
+                                    Binding="{Binding StateText}"
+                                    ElementStyle="{StaticResource RegionCellText}"
+                                    MinWidth="60"
+                                    Width="60" />
+                <DataGridTextColumn Header="保护"
+                                    Binding="{Binding ProtectText}"
+                                    ElementStyle="{StaticResource RegionCellText}"
+                                    MinWidth="88"
+                                    Width="88" />
+                <DataGridTextColumn Header="类型"
+                                    Binding="{Binding TypeText}"
+                                    ElementStyle="{StaticResource RegionCellText}"
+                                    MinWidth="62"
+                                    Width="62" />
+                <DataGridTextColumn Header="大小"
+                                    Binding="{Binding SizeText}"
+                                    ElementStyle="{StaticResource RegionCellText}"
+                                    MinWidth="78"
+                                    Width="78" />
+                <DataGridTextColumn Header="模块"
+                                    Binding="{Binding ModuleName}"
+                                    ElementStyle="{StaticResource RegionCellText}"
+                                    MinWidth="118"
+                                    Width="118" />
+                <DataGridTextColumn Header="节"
+                                    Binding="{Binding SectionName}"
+                                    ElementStyle="{StaticResource RegionCellText}"
+                                    MinWidth="78"
+                                    Width="78" />
+                <DataGridTextColumn Header="备注"
+                                    Binding="{Binding AllocationProtectText}"
+                                    ElementStyle="{StaticResource RegionCellText}"
+                                    MinWidth="124"
+                                    Width="124" />
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <Border Grid.Row="3"
+                Padding="8,3"
+                BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                BorderThickness="0,1,0,0"
+                Background="{DynamicResource SubtleFillColorSecondaryBrush}">
+            <DockPanel>
+                <TextBlock DockPanel.Dock="Left"
+                           FontSize="11"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}">
+                    <Run Text="区域数: " />
+                    <Run FontWeight="SemiBold"
+                         Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                         Text="{Binding MemoryRegions.Count, Mode=OneWay}" />
+                </TextBlock>
+                <TextBlock DockPanel.Dock="Right"
+                           HorizontalAlignment="Right"
+                           FontFamily="Cascadia Code, Consolas, monospace"
+                           FontSize="11"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                           Text="{Binding StatusText}" />
+                <Border />
+            </DockPanel>
+        </Border>
+        <controls:PanelProcessOverlay Grid.Row="0"
+                                      Grid.RowSpan="4" />
+    </Grid>
+</UserControl>

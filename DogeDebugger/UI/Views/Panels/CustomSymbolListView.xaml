@@ -1,0 +1,54 @@
+<UserControl x:Class="DogeDebugger.UI.Views.Panels.CustomSymbolListView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <Border Grid.Row="0"
+                Padding="4,3"
+                BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                BorderThickness="0,0,0,1">
+            <ui:Button Appearance="Secondary"
+                       FontSize="12"
+                       Padding="8,4"
+                       Command="{Binding ClearCustomSymbolsCommand}">
+                <StackPanel Orientation="Horizontal">
+                    <ui:SymbolIcon Symbol="Delete24"
+                                   Margin="0,0,5,0" />
+                    <TextBlock Text="全部删除" />
+                </StackPanel>
+            </ui:Button>
+        </Border>
+        <DataGrid Grid.Row="1"
+                  ItemsSource="{Binding CustomSymbols}"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="True"
+                  CanUserAddRows="False"
+                  CanUserDeleteRows="False"
+                  HeadersVisibility="Column"
+                  ColumnHeaderHeight="32"
+                  GridLinesVisibility="Horizontal"
+                  EnableRowVirtualization="True"
+                  VirtualizingPanel.IsVirtualizing="True"
+                  VirtualizingPanel.VirtualizationMode="Recycling"
+                  BorderThickness="0"
+                  Background="Transparent"
+                  FontFamily="Cascadia Code, Consolas, monospace"
+                  FontSize="12">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="地址"
+                                    Binding="{Binding AddressText}"
+                                    Width="150" />
+                <DataGridTextColumn Header="模块"
+                                    Binding="{Binding ModuleName}"
+                                    Width="150" />
+                <DataGridTextColumn Header="名称"
+                                    Binding="{Binding Name}"
+                                    Width="530" />
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+</UserControl>

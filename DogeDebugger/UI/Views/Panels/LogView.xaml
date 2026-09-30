@@ -1,0 +1,51 @@
+<UserControl x:Class="DogeDebugger.UI.Views.Panels.LogView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <Border Grid.Row="0"
+                Padding="6,4"
+                BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                BorderThickness="0,0,0,1">
+            <ui:Button Appearance="Secondary"
+                       FontSize="11"
+                       Padding="8,3"
+                       HorizontalAlignment="Left"
+                       Click="OnClearLogClick">
+                <StackPanel Orientation="Horizontal">
+                    <ui:SymbolIcon Symbol="Delete24"
+                                   Margin="0,0,5,0" />
+                    <TextBlock Text="清除日志" />
+                </StackPanel>
+            </ui:Button>
+        </Border>
+        <DataGrid Grid.Row="1"
+                  ItemsSource="{Binding LogMessages}"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="True"
+                  CanUserAddRows="False"
+                  CanUserDeleteRows="False"
+                  HeadersVisibility="Column"
+                  ColumnHeaderHeight="28"
+                  GridLinesVisibility="Horizontal"
+                  BorderThickness="0"
+                  Background="Transparent"
+                  FontFamily="Cascadia Code, Consolas, monospace"
+                  FontSize="12"
+                  EnableRowVirtualization="True"
+                  VirtualizingPanel.IsVirtualizing="True">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="时间"
+                                    Binding="{Binding TimestampText}"
+                                    Width="100" />
+                <DataGridTextColumn Header="事件"
+                                    Binding="{Binding Message}"
+                                    Width="730" />
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+</UserControl>

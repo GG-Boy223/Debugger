@@ -1,0 +1,406 @@
+<UserControl x:Class="DogeDebugger.UI.Views.Panels.MemorySearchView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:DogeDebugger"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             FontFamily="Cascadia Code, Consolas, monospace"
+             FontSize="12">
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+    </UserControl.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="360" />
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0"
+                BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                BorderThickness="0,0,0,1"
+                Padding="6,3">
+            <DockPanel>
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
+                    <TextBlock FontSize="11"
+                               Foreground="{DynamicResource TextFillColorSecondaryBrush}">
+                        <Run Text="结果数: " />
+                        <Run Text="{Binding ResultCount, Mode=OneWay}"
+                             FontWeight="SemiBold"
+                             Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+                    </TextBlock>
+                    <TextBlock Margin="12,0,0,0"
+                               FontSize="11"
+                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                               Text="(结果超过 100000 条，仅显示前 100000 条)"
+                               Visibility="Collapsed" />
+                </StackPanel>
+                <TextBlock DockPanel.Dock="Right"
+                           HorizontalAlignment="Right"
+                           VerticalAlignment="Center"
+                           FontSize="11"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                           Text="双击结果可添加到地址列表" />
+            </DockPanel>
+        </Border>
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="5" />
+                <ColumnDefinition Width="390" />
+            </Grid.ColumnDefinitions>
+
+            <DataGrid Grid.Column="0"
+                      x:Name="ResultsGrid"
+                      ItemsSource="{Binding Results}"
+                      SelectedItem="{Binding SelectedResult}"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="True"
+                      HeadersVisibility="Column"
+                      GridLinesVisibility="Horizontal"
+                      CanUserAddRows="False"
+                      CanUserDeleteRows="False"
+                      EnableRowVirtualization="True"
+                      VirtualizingPanel.IsVirtualizing="True"
+                      VirtualizingPanel.VirtualizationMode="Recycling"
+                      BorderThickness="0"
+                      Background="Transparent"
+                      MouseDoubleClick="OnResultsMouseDoubleClick">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="地址"
+                                        Binding="{Binding AddressText}"
+                                        Width="320" />
+                    <DataGridTextColumn Header="当前值"
+                                        Binding="{Binding DisplayValue}"
+                                        Width="140" />
+                    <DataGridTextColumn Header="先前值"
+                                        Binding="{Binding PreviousValueText}"
+                                        Width="140" />
+                    <DataGridTextColumn Header="描述"
+                                        Binding="{Binding Description}"
+                                        Width="240" />
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <GridSplitter Grid.Column="1"
+                          Width="5"
+                          HorizontalAlignment="Stretch"
+                          Background="{DynamicResource ControlStrokeColorDefaultBrush}" />
+
+            <ScrollViewer Grid.Column="2"
+                          VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled">
+                <StackPanel Margin="6,0,0,0">
+                    <StackPanel Orientation="Horizontal">
+                        <ui:Button Content="首次搜索"
+                                   Command="{Binding FirstScanCommand}"
+                                   Margin="0,0,3,0"
+                                   Padding="8,2" />
+                        <ui:Button Content="再次搜索"
+                                   Command="{Binding NextScanCommand}"
+                                   Margin="3,0"
+                                   Padding="8,2" />
+                        <ui:Button Content="撤销搜索"
+                                   Command="{Binding ResetCommand}"
+                                   Margin="3,0"
+                                   Padding="8,2" />
+                        <ui:Button Content="停止搜索"
+                                   Command="{Binding CancelScanCommand}"
+                                   Margin="3,0,0,0"
+                                   Padding="8,2" />
+                    </StackPanel>
+
+                    <Grid Margin="0,6,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0"
+                                   Text="值:"
+                                   Margin="0,0,6,0"
+                                   VerticalAlignment="Center" />
+                        <CheckBox Grid.Column="1"
+                                  Content="16进制"
+                                  IsChecked="{Binding IsHexValue}"
+                                  Margin="0,0,6,0"
+                                  VerticalAlignment="Center" />
+                        <TextBox Grid.Column="2"
+                                 x:Name="SearchValueInput"
+                                 Text="{Binding SearchValue, UpdateSourceTrigger=PropertyChanged}"
+                                 Height="26"
+                                 Padding="6,2"
+                                 ToolTip="{Binding SearchValueHint}" />
+                    </Grid>
+
+                    <Grid Margin="0,6,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0"
+                                   Text="搜索类型"
+                                   Margin="0,0,6,0"
+                                   VerticalAlignment="Center" />
+                        <ComboBox Grid.Column="1"
+                                  x:Name="ScanTypeCombo"
+                                  ItemsSource="{Binding ScanTypes}"
+                                  SelectedItem="{Binding SelectedScanType}"
+                                  DisplayMemberPath="DisplayName"
+                                  Height="28"
+                                  Margin="0,0,8,0" />
+                        <TextBlock Grid.Column="2"
+                                   Text="值类型"
+                                   Margin="0,0,6,0"
+                                   VerticalAlignment="Center" />
+                        <ComboBox Grid.Column="3"
+                                  ItemsSource="{Binding ValueTypes}"
+                                  SelectedItem="{Binding SelectedValueType}"
+                                  DisplayMemberPath="DisplayName"
+                                  Height="28" />
+                    </Grid>
+
+                    <Grid Margin="0,6,0,0"
+                          Visibility="{Binding IsStringType, Converter={StaticResource BoolToVis}}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0"
+                                   Margin="0,0,6,0"
+                                   VerticalAlignment="Center"
+                                   Text="编码" />
+                        <ComboBox Grid.Column="1"
+                                  x:Name="StringEncodingCombo"
+                                  ItemsSource="{Binding StringEncodingOptions}"
+                                  SelectedItem="{Binding SelectedStringEncoding}"
+                                  DisplayMemberPath="DisplayName"
+                                  Height="28" />
+                    </Grid>
+
+                    <Grid Margin="0,6,0,0"
+                          Visibility="{Binding IsCustomCodePage, Converter={StaticResource BoolToVis}}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="90" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0"
+                                   Margin="0,0,6,0"
+                                   VerticalAlignment="Center"
+                                   Text="代码页" />
+                        <TextBox Grid.Column="1"
+                                 Height="26"
+                                 Padding="6,2"
+                                 Text="{Binding CustomCodePage, UpdateSourceTrigger=PropertyChanged}" />
+                        <TextBlock Grid.Column="2"
+                                   Margin="6,0,0,0"
+                                   VerticalAlignment="Center"
+                                   Foreground="#FFE51400"
+                                   Text="代码页无效"
+                                   Visibility="{Binding IsCustomCodePageInvalid, Converter={StaticResource BoolToVis}}" />
+                    </Grid>
+
+                    <Grid Margin="0,6,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0"
+                                   Text="起始"
+                                   Margin="0,0,6,0"
+                                   VerticalAlignment="Center" />
+                        <TextBox Grid.Column="1"
+                                 Text="{Binding StartAddress, UpdateSourceTrigger=PropertyChanged}"
+                                 Height="26"
+                                 Padding="6,2"
+                                 Margin="0,0,8,0" />
+                        <TextBlock Grid.Column="2"
+                                   Text="结束"
+                                   Margin="0,0,6,0"
+                                   VerticalAlignment="Center" />
+                        <TextBox Grid.Column="3"
+                                 Text="{Binding EndAddress, UpdateSourceTrigger=PropertyChanged}"
+                                 Height="26"
+                                 Padding="6,2" />
+                    </Grid>
+
+                    <TextBlock Margin="0,8,0,0"
+                               FontSize="11"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                               Text="内存搜索选项" />
+
+                    <WrapPanel Margin="0,6,0,0">
+                        <CheckBox Content="私有内存"
+                                  IsChecked="{Binding SearchPrivateMemory}"
+                                  Margin="0,0,10,0" />
+                        <CheckBox Content="镜像内存"
+                                  IsChecked="{Binding SearchImageMemory}"
+                                  Margin="0,0,10,0" />
+                        <CheckBox Content="映射内存"
+                                  IsChecked="{Binding SearchMappedMemory}"
+                                  Margin="0,0,10,0" />
+                    </WrapPanel>
+
+                    <WrapPanel Margin="0,6,0,0">
+                        <CheckBox Content="可写"
+                                  IsChecked="{Binding WritableOnly}"
+                                  Margin="0,0,10,0" />
+                        <CheckBox Content="可执行"
+                                  IsChecked="{Binding ExecutableOnly}"
+                                  Margin="0,0,10,0" />
+                        <CheckBox Content="写拷贝"
+                                  IsEnabled="False"
+                                  Margin="0,0,10,0" />
+                        <CheckBox Content="快速搜索"
+                                  IsChecked="{Binding FastScanEnabled}"
+                                  Margin="0,0,6,0" />
+                        <TextBox x:Name="FastScanAlignmentInput"
+                                 Width="42"
+                                 Height="26"
+                                 Text="{Binding FastScanAlignment, UpdateSourceTrigger=PropertyChanged}"
+                                 Padding="6,2"
+                                 Margin="0,0,6,0" />
+                        <RadioButton Content="对齐"
+                                     IsChecked="True"
+                                     IsEnabled="False"
+                                     Margin="0,0,0,0" />
+                    </WrapPanel>
+
+                        <CheckBox Content="搜索时暂停目标进程"
+                                  IsEnabled="False"
+                                  Margin="0,6,0,0" />
+                    <CheckBox Content="含地址列表的字符串类型"
+                              IsChecked="{Binding IncludeAddressListStrings}"
+                              Margin="0,6,0,0" />
+                    <CheckBox Content="忽略字符串大小写"
+                              IsChecked="{Binding IgnoreCase}"
+                              Margin="0,6,0,0" />
+                    <WrapPanel Margin="0,6,0,0">
+                        <TextBlock Margin="0,0,6,0"
+                                   VerticalAlignment="Center"
+                                   Text="结束位" />
+                        <TextBox Width="52"
+                                 Height="26"
+                                 Padding="6,2"
+                                 Text="{Binding BitStart, UpdateSourceTrigger=PropertyChanged}" />
+                        <TextBlock Margin="8,0,6,0"
+                                   VerticalAlignment="Center"
+                                   Text="长度" />
+                        <TextBox Width="52"
+                                 Height="26"
+                                 Padding="6,2"
+                                 Text="{Binding BitLength, UpdateSourceTrigger=PropertyChanged}" />
+                        <CheckBox Content="以 0 结尾"
+                                  IsChecked="{Binding ZeroTerminate}"
+                                  Margin="10,0,0,0"
+                                  VerticalAlignment="Center" />
+                    </WrapPanel>
+                    <TextBlock Margin="0,6,0,0"
+                               FontSize="11"
+                               Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                               Text="{Binding SearchValueHint}"
+                               TextWrapping="Wrap"
+                               Visibility="{Binding IsByteArrayType, Converter={StaticResource BoolToVis}}" />
+                    <TextBlock Text="浮点舍入模式"
+                               Margin="0,6,0,2"
+                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                               Visibility="Collapsed" />
+                    <StackPanel Orientation="Horizontal"
+                                Visibility="Collapsed">
+                        <RadioButton Content="标准舍入"
+                                     IsChecked="True"
+                                     IsEnabled="False"
+                                     Margin="0,0,8,0" />
+                        <RadioButton Content="极端舍入"
+                                     IsEnabled="False"
+                                     Margin="0,0,8,0" />
+                        <RadioButton Content="截断比较"
+                                     IsEnabled="False" />
+                    </StackPanel>
+
+                    <WrapPanel Margin="0,6,0,0">
+                        <ui:Button Content="导入"
+                                   IsEnabled="False"
+                                   Margin="0,0,6,0"
+                                   Padding="10,3" />
+                        <ui:Button Content="导出"
+                                   IsEnabled="False"
+                                   Margin="0,0,6,0"
+                                   Padding="10,3" />
+                        <ui:Button Content="热键: 启用"
+                                   IsEnabled="False"
+                                   Margin="0,0,6,0"
+                                   Padding="10,3" />
+                        <ui:Button Content="手动添加地址"
+                                   IsEnabled="False"
+                                   HorizontalAlignment="Right"
+                                   Padding="10,3" />
+                    </WrapPanel>
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+
+        <GridSplitter Grid.Row="2"
+                      Height="5"
+                      HorizontalAlignment="Stretch"
+                      Background="{DynamicResource ControlStrokeColorDefaultBrush}" />
+
+        <Border Grid.Row="3"
+                BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                BorderThickness="0,1,0,0">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <Grid Grid.Row="0" Margin="0,3,0,3">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="22" />
+                        <ColumnDefinition Width="220" />
+                        <ColumnDefinition Width="170" />
+                        <ColumnDefinition Width="110" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="锁定" />
+                    <TextBlock Grid.Column="1" Text="描述" />
+                    <TextBlock Grid.Column="2" Text="地址" />
+                    <TextBlock Grid.Column="3" Text="类型" />
+                    <TextBlock Grid.Column="4" Text="值" />
+                </Grid>
+                <ListBox Grid.Row="1"
+                         x:Name="SavedAddressTree"
+                         ItemsSource="{Binding SavedAddresses}"
+                         BorderThickness="0"
+                         Background="Transparent" />
+            </Grid>
+        </Border>
+
+        <Border Grid.RowSpan="3"
+                x:Name="ProcessOverlay"
+                Background="{DynamicResource ApplicationBackgroundBrush}"
+                Visibility="{Binding ProcessOverlayVisibility}">
+            <StackPanel HorizontalAlignment="Center"
+                        VerticalAlignment="Center">
+                <ui:SymbolIcon Symbol="PlugDisconnected20"
+                               FontSize="48"
+                               Margin="0,0,0,8" />
+                <TextBlock Text="等待选择进程"
+                           FontSize="16"
+                           FontWeight="SemiBold"
+                           HorizontalAlignment="Center"
+                           Margin="0,0,0,4" />
+                <TextBlock Text="通过 文件 → 打开进程 选择目标进程"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                           HorizontalAlignment="Center" />
+            </StackPanel>
+        </Border>
+
+    </Grid>
+</UserControl>

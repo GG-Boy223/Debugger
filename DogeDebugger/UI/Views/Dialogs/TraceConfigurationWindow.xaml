@@ -1,0 +1,165 @@
+<ui:FluentWindow x:Class="DogeDebugger.UI.Views.Dialogs.TraceConfigurationWindow"
+                 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                 xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+                 Title="追踪配置"
+                 Width="640"
+                 Height="620"
+                 MinWidth="640"
+                 MinHeight="620"
+                 WindowStartupLocation="CenterOwner"
+                 ResizeMode="NoResize"
+                 FontFamily="{DynamicResource AppUiFontFamily}"
+                 FontSize="{DynamicResource AppUiFontSize}"
+                 Background="{DynamicResource WindowBackgroundBrush}">
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <TextBlock x:Name="StopConditionHeader"
+                   Grid.Row="0"
+                   FontWeight="SemiBold"
+                   Text="停止条件" />
+        <StackPanel x:Name="StopConditionPanel"
+                    Grid.Row="1"
+                    Margin="0,10,0,0">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="170" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <RadioButton x:Name="StepCountRadio"
+                             Grid.Column="0"
+                             VerticalAlignment="Center"
+                             GroupName="StopCondition"
+                             IsChecked="True"
+                             Checked="OnStopConditionChanged"
+                             Content="按步数停止" />
+                <ui:TextBox x:Name="StepCountInput"
+                            Grid.Column="1"
+                            Height="30"
+                            Text="1000" />
+                <TextBlock Grid.Column="2"
+                           Margin="8,0,0,0"
+                           VerticalAlignment="Center"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                           Text="(最多 10000000)" />
+            </Grid>
+
+            <Grid Margin="0,10,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="170" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <RadioButton x:Name="RipMatchRadio"
+                             Grid.Column="0"
+                             VerticalAlignment="Center"
+                             GroupName="StopCondition"
+                             Checked="OnStopConditionChanged"
+                             Content="命中 RIP 停止" />
+                <ui:TextBox x:Name="RipInput"
+                            Grid.Column="1"
+                            Height="30"
+                            FontFamily="Cascadia Code, Consolas, monospace" />
+            </Grid>
+
+            <RadioButton x:Name="LuaConditionRadio"
+                         Margin="0,10,0,0"
+                         GroupName="StopCondition"
+                         Checked="OnStopConditionChanged"
+                         Content="Lua 条件成立时停止" />
+            <ui:TextBox x:Name="LuaConditionInput"
+                        Height="72"
+                        Margin="0,8,0,0"
+                        AcceptsReturn="True"
+                        TextWrapping="Wrap"
+                        VerticalScrollBarVisibility="Auto"
+                        FontFamily="Cascadia Code, Consolas, monospace"
+                        ToolTip="表达式可直接使用 RIP、RAX、RCX 等寄存器，例如 rip == 0x7FF... 或 rax != 0。" />
+        </StackPanel>
+
+        <TextBlock x:Name="StepModeHeader"
+                   Grid.Row="2"
+                   Margin="0,18,0,0"
+                   FontWeight="SemiBold"
+                   Text="步进模式" />
+        <StackPanel x:Name="StepModePanel"
+                    Grid.Row="3"
+                    Margin="0,8,0,0"
+                    Orientation="Horizontal">
+            <RadioButton x:Name="StepIntoRadio"
+                         Margin="0,0,24,0"
+                         GroupName="TraceMode"
+                         IsChecked="True"
+                         Content="步入 (Step Into)" />
+            <RadioButton x:Name="StepOverRadio"
+                         GroupName="TraceMode"
+                         Content="步过 (Step Over)" />
+        </StackPanel>
+
+        <Grid x:Name="TraceProgressPanel"
+              Grid.Row="4"
+              Margin="0,20,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <ProgressBar x:Name="TraceProgressBar"
+                         Height="6"
+                         VerticalAlignment="Center" />
+            <TextBlock x:Name="ProgressText"
+                       Grid.Column="1"
+                       Margin="12,0,0,0"
+                       VerticalAlignment="Center" />
+        </Grid>
+
+        <TextBlock x:Name="StatusText"
+                   Grid.Row="5"
+                   Margin="0,16,0,0"
+                   VerticalAlignment="Top"
+                   Visibility="Collapsed"
+                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                   TextWrapping="Wrap"
+                   Text="目标进程必须处于暂停状态才能开始追踪。" />
+
+        <StackPanel Grid.Row="6"
+                    Margin="0,14,0,0"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right">
+            <ui:Button x:Name="StartButton"
+                       Width="100"
+                       Height="32"
+                       Margin="0,0,8,0"
+                       Appearance="Primary"
+                       Click="OnStartClick"
+                       Content="开始" />
+            <ui:Button x:Name="StopButton"
+                       Width="100"
+                       Height="32"
+                       Margin="0,0,8,0"
+                       Visibility="Collapsed"
+                       Click="OnStopClick"
+                       Content="停止" />
+            <ui:Button x:Name="ViewResultButton"
+                       Width="100"
+                       Height="32"
+                       Margin="0,0,8,0"
+                       Visibility="Collapsed"
+                       Click="OnViewResultClick"
+                       Content="查看结果" />
+            <ui:Button x:Name="CloseButton"
+                       Width="72"
+                       Height="32"
+                       Click="OnCloseClick"
+                       Content="关闭" />
+        </StackPanel>
+    </Grid>
+</ui:FluentWindow>

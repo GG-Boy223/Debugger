@@ -1,0 +1,235 @@
+<UserControl x:Class="DogeDebugger.UI.Views.Panels.CallStackView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             xmlns:stack="clr-namespace:DogeDebugger.Core.Debugger.Stack">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0"
+                Padding="6,3"
+                BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                BorderThickness="0,0,0,1">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Left"
+                            Orientation="Horizontal">
+                    <ui:Button Appearance="Primary"
+                               Command="{Binding RefreshCallStackCommand}"
+                               FontSize="11"
+                               Margin="0,0,4,0"
+                               Padding="10,3">
+                        <ui:Button.Icon>
+                            <ui:SymbolIcon Filled="False"
+                                           FontSize="12"
+                                           Symbol="ArrowSync24" />
+                        </ui:Button.Icon>
+                        刷新
+                    </ui:Button>
+                    <ui:Button Appearance="Secondary"
+                               Command="{Binding NavigateToCallStackFrameCommand}"
+                               FontSize="11"
+                               Margin="0,0,4,0"
+                               Padding="10,3">
+                        跳转到帧
+                    </ui:Button>
+                    <ui:Button Appearance="Secondary"
+                               Command="{Binding CopyFullCallStackCommand}"
+                               FontSize="11"
+                               Padding="10,3">
+                        <ui:Button.Icon>
+                            <ui:SymbolIcon Filled="False"
+                                           FontSize="12"
+                                           Symbol="Copy24" />
+                        </ui:Button.Icon>
+                        复制堆栈
+                    </ui:Button>
+                </StackPanel>
+                <TextBlock DockPanel.Dock="Right"
+                           HorizontalAlignment="Right"
+                           VerticalAlignment="Center"
+                           FontSize="11"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}">
+                    <Run Text="帧数: " />
+                    <Run FontWeight="SemiBold"
+                         Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                         Text="{Binding CallStackFrameCount, Mode=OneWay}" />
+                </TextBlock>
+                <Border />
+            </DockPanel>
+        </Border>
+
+        <Border Grid.Row="1"
+                Padding="8,2"
+                Background="{DynamicResource SubtleFillColorSecondaryBrush}"
+                BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                BorderThickness="0,0,0,1">
+            <TextBlock FontSize="11"
+                       Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                       Text="{Binding CallStackStatusText}" />
+        </Border>
+
+        <DataGrid x:Name="CallStackGrid"
+                  Grid.Row="2"
+                  ItemsSource="{Binding CallStack}"
+                  SelectedItem="{Binding SelectedCallStackRow}"
+                  AutoGenerateColumns="False"
+                  CanUserSortColumns="False"
+                  IsReadOnly="True"
+                  SelectionMode="Extended"
+                  SelectionUnit="FullRow"
+                  CanUserAddRows="False"
+                  CanUserDeleteRows="False"
+                  HeadersVisibility="Column"
+                  ColumnHeaderHeight="32"
+                  GridLinesVisibility="Horizontal"
+                  BorderThickness="0"
+                  Background="Transparent"
+                  FontFamily="Cascadia Code, Consolas, monospace"
+                  FontSize="12"
+                  EnableRowVirtualization="True"
+                  VirtualizingPanel.IsVirtualizing="True"
+                  VirtualizingPanel.VirtualizationMode="Recycling"
+                  MouseDoubleClick="OnCallStackRowDoubleClick"
+                  PreviewKeyDown="OnCallStackKeyDown">
+            <DataGrid.Columns>
+                <DataGridTextColumn Binding="{Binding Index}"
+                                    Width="60">
+                    <DataGridTextColumn.HeaderTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="#" />
+                        </DataTemplate>
+                    </DataGridTextColumn.HeaderTemplate>
+                </DataGridTextColumn>
+                <DataGridTextColumn Binding="{Binding First}"
+                                    Width="180">
+                    <DataGridTextColumn.HeaderTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding DataContext.CallStackFirstHeader, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
+                        </DataTemplate>
+                    </DataGridTextColumn.HeaderTemplate>
+                </DataGridTextColumn>
+                <DataGridTextColumn Binding="{Binding Second}"
+                                    Width="360">
+                    <DataGridTextColumn.HeaderTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding DataContext.CallStackSecondHeader, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
+                        </DataTemplate>
+                    </DataGridTextColumn.HeaderTemplate>
+                </DataGridTextColumn>
+                <DataGridTextColumn Binding="{Binding Third}"
+                                    Width="*">
+                    <DataGridTextColumn.HeaderTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding DataContext.CallStackThirdHeader, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
+                        </DataTemplate>
+                    </DataGridTextColumn.HeaderTemplate>
+                </DataGridTextColumn>
+            </DataGrid.Columns>
+            <DataGrid.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Command="{Binding NavigateToCallStackFrameCommand}"
+                              Header="在反汇编跳转" />
+                    <Separator />
+                    <MenuItem Command="{Binding SetCallStackDisplayModeCommand}"
+                              CommandParameter="{x:Static stack:CallStackDisplayMode.StackTrace}"
+                              Header="调用堆栈"
+                              IsCheckable="True"
+                              IsChecked="{Binding IsCallStackModeStackTrace, Mode=OneWay}" />
+                    <MenuItem Command="{Binding SetCallStackDisplayModeCommand}"
+                              CommandParameter="{x:Static stack:CallStackDisplayMode.FullStack}"
+                              Header="完整堆栈"
+                              IsCheckable="True"
+                              IsChecked="{Binding IsCallStackModeFullStack, Mode=OneWay}" />
+                    <MenuItem Command="{Binding SetCallStackDisplayModeCommand}"
+                              CommandParameter="{x:Static stack:CallStackDisplayMode.ModulesOnly}"
+                              Header="只显示模块"
+                              IsCheckable="True"
+                              IsChecked="{Binding IsCallStackModeModulesOnly, Mode=OneWay}" />
+                    <MenuItem Command="{Binding SetCallStackDisplayModeCommand}"
+                              CommandParameter="{x:Static stack:CallStackDisplayMode.NonSystemModulesOnly}"
+                              Header="只显示非系统模块"
+                              IsCheckable="True"
+                              IsChecked="{Binding IsCallStackModeNonSystemModulesOnly, Mode=OneWay}" />
+                    <Separator />
+                    <MenuItem Command="{Binding CopyCallStackAddressCommand}"
+                              Header="复制地址" />
+                    <MenuItem Click="OnCopySelectedRowsClick"
+                              Header="复制选中行"
+                              InputGestureText="Ctrl+C" />
+                    <MenuItem Command="{Binding CopyFullCallStackCommand}"
+                              Header="复制完整堆栈" />
+                    <Separator />
+                    <MenuItem Click="OnMaxStackBytesClick">
+                        <MenuItem.Header>
+                            <TextBlock>
+                                <Run Text="最大堆栈大小: " />
+                                <Run FontWeight="SemiBold"
+                                     Text="{Binding MaxStackBytes, Mode=OneWay}" />
+                            </TextBlock>
+                        </MenuItem.Header>
+                    </MenuItem>
+                    <MenuItem Command="{Binding SetCallStackReferenceBaseCommand}"
+                              CommandParameter="{x:Static stack:CallStackReferenceBase.Rsp}"
+                              Header="(rsp+*)"
+                              IsCheckable="True"
+                              IsChecked="{Binding IsCallStackReferenceRsp, Mode=OneWay}" />
+                    <MenuItem Command="{Binding SetCallStackReferenceBaseCommand}"
+                              CommandParameter="{x:Static stack:CallStackReferenceBase.Rbp}"
+                              Header="(rbp+*)"
+                              IsCheckable="True"
+                              IsChecked="{Binding IsCallStackReferenceRbp, Mode=OneWay}" />
+                    <MenuItem Command="{Binding UseSelectedCallStackRowAsReferenceCommand}"
+                              InputGestureText="Space"
+                              IsCheckable="True"
+                              IsChecked="{Binding IsCallStackReferenceSelectedRow, Mode=OneWay}">
+                        <MenuItem.Header>
+                            <TextBlock>
+                                <Run Text="(ref+*) 引用是 " />
+                                <Run FontWeight="SemiBold"
+                                     Text="{Binding CallStackReferenceText, Mode=OneWay}" />
+                            </TextBlock>
+                        </MenuItem.Header>
+                    </MenuItem>
+                </ContextMenu>
+            </DataGrid.ContextMenu>
+        </DataGrid>
+
+        <Border Grid.Row="0"
+                Grid.RowSpan="3"
+                Panel.ZIndex="10"
+                Background="{DynamicResource SolidBackgroundFillColorBaseBrush}">
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsDebuggerPaused}" Value="False">
+                            <Setter Property="Visibility" Value="Visible" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
+            <StackPanel HorizontalAlignment="Center"
+                        VerticalAlignment="Center">
+                <ui:SymbolIcon HorizontalAlignment="Center"
+                               Margin="0,0,0,8"
+                               FontSize="48"
+                               Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                               Symbol="LockClosed24" />
+                <TextBlock HorizontalAlignment="Center"
+                           Margin="0,0,0,4"
+                           FontSize="16"
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                           Text="调试中断后可用" />
+                <TextBlock HorizontalAlignment="Center"
+                           FontSize="12"
+                           Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                           Text="附加调试器且线程中断后此面板可用" />
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

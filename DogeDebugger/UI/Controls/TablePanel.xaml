@@ -1,0 +1,44 @@
+<UserControl x:Class="DogeDebugger.UI.Controls.TablePanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:DogeDebugger.UI.Controls">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <Border Grid.Row="0"
+                Padding="6,4"
+                BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                BorderThickness="0,0,0,1">
+            <DockPanel>
+                <TextBlock Text="{Binding Header, RelativeSource={RelativeSource AncestorType=local:TablePanel}}"
+                           FontWeight="SemiBold"
+                           FontSize="12"
+                           VerticalAlignment="Center"
+                           DockPanel.Dock="Left" />
+                <TextBlock HorizontalAlignment="Right"
+                           FontSize="11"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}">
+                    <Run Text="项目数: " />
+                    <Run Text="{Binding ItemCount, RelativeSource={RelativeSource AncestorType=local:TablePanel}}" />
+                </TextBlock>
+            </DockPanel>
+        </Border>
+        <DataGrid Grid.Row="1"
+                  ItemsSource="{Binding ItemsSource, RelativeSource={RelativeSource AncestorType=local:TablePanel}}"
+                  AutoGenerateColumns="True"
+                  IsReadOnly="True"
+                  CanUserAddRows="False"
+                  CanUserDeleteRows="False"
+                  HeadersVisibility="Column"
+                  GridLinesVisibility="Horizontal"
+                  EnableRowVirtualization="True"
+                  VirtualizingPanel.IsVirtualizing="True"
+                  VirtualizingPanel.VirtualizationMode="Recycling"
+                  Background="Transparent"
+                  BorderThickness="0"
+                  FontFamily="Cascadia Code, Consolas, monospace"
+                  FontSize="12" />
+    </Grid>
+</UserControl>

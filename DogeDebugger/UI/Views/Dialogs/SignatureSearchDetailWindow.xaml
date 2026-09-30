@@ -1,0 +1,177 @@
+<Window x:Class="DogeDebugger.UI.Views.Dialogs.SignatureSearchDetailWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+        Width="1180"
+        Height="720"
+        MinWidth="940"
+        MinHeight="560"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False"
+        Background="#FFFAFAFA"
+        Foreground="#E4000000"
+        FontFamily="{DynamicResource AppUiFontFamily}"
+        FontSize="{DynamicResource AppUiFontSize}">
+    <Grid Margin="14,12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="10" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Border Padding="13,10"
+                CornerRadius="7"
+                BorderThickness="1"
+                BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1.4*" />
+                    <ColumnDefinition Width="120" />
+                    <ColumnDefinition Width="120" />
+                    <ColumnDefinition Width="110" />
+                </Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock x:Name="TargetNameText"
+                               FontSize="15"
+                               FontWeight="SemiBold" />
+                    <TextBlock x:Name="TargetDescriptionText"
+                               Margin="0,3,12,0"
+                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                               TextWrapping="Wrap" />
+                </StackPanel>
+                <StackPanel Grid.Column="1">
+                    <TextBlock FontSize="11"
+                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                               Text="A 版偏移" />
+                    <TextBlock x:Name="SourceOffsetText"
+                               FontFamily="{DynamicResource AppCodeFontFamily}"
+                               FontWeight="SemiBold" />
+                </StackPanel>
+                <StackPanel Grid.Column="2">
+                    <TextBlock FontSize="11"
+                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                               Text="B 版偏移" />
+                    <TextBlock x:Name="TargetOffsetText"
+                               FontFamily="{DynamicResource AppCodeFontFamily}"
+                               FontWeight="SemiBold" />
+                </StackPanel>
+                <StackPanel Grid.Column="3">
+                    <TextBlock FontSize="11"
+                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                               Text="置信度" />
+                    <TextBlock x:Name="ConfidenceText"
+                               FontWeight="SemiBold" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="2.15*" />
+                <ColumnDefinition Width="10" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <Border CornerRadius="7"
+                    BorderThickness="1"
+                    BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                    Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+                <DataGrid x:Name="EvidenceGrid"
+                          AutoGenerateColumns="False"
+                          IsReadOnly="True"
+                          CanUserAddRows="False"
+                          HeadersVisibility="Column"
+                          GridLinesVisibility="Horizontal"
+                          SelectionMode="Single"
+                          SelectionChanged="OnEvidenceSelectionChanged">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="字节特征"
+                                            Binding="{Binding KindText}"
+                                            Width="90" />
+                        <DataGridTextColumn Header="锚点"
+                                            Binding="{Binding LocatorName}"
+                                            Width="90" />
+                        <DataGridTextColumn Header="A 版命中"
+                                            Binding="{Binding SourceAnchor}"
+                                            Width="140" />
+                        <DataGridTextColumn Header="B 版命中"
+                                            Binding="{Binding TargetMatch}"
+                                            Width="140" />
+                        <DataGridTextColumn Header="解析方式"
+                                            Binding="{Binding ResolverText}"
+                                            Width="110" />
+                        <DataGridTextColumn Header="B 版偏移"
+                                            Binding="{Binding ResolvedRvaText}"
+                                            Width="90" />
+                        <DataGridTextColumn Header="状态"
+                                            Binding="{Binding Resolution}"
+                                            Width="90" />
+                        <DataGridTextColumn Header="置信度"
+                                            Binding="{Binding ConfidenceText}"
+                                            Width="60" />
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Border>
+
+            <Border Grid.Column="2"
+                    Padding="13,11"
+                    CornerRadius="7"
+                    BorderThickness="1"
+                    BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                    Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <StackPanel Margin="0,0,0,9"
+                                Orientation="Horizontal">
+                        <ui:SymbolIcon Symbol="Info24"
+                                       Margin="0,0,7,0"
+                                       FontSize="16"
+                                       Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" />
+                        <TextBlock FontWeight="SemiBold"
+                                   Text="静态交叉验证与目标证据" />
+                    </StackPanel>
+                    <Grid Grid.Row="1"
+                          Margin="0,0,0,9">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="8" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <ComboBox x:Name="CandidateCombo"
+                                  MinWidth="190"
+                                  DisplayMemberPath="DisplayName"
+                                  SelectionChanged="OnCandidateSelectionChanged" />
+                        <ui:Button x:Name="ConfirmCandidateButton"
+                                   Grid.Column="2"
+                                   Padding="11,5"
+                                   Appearance="Primary"
+                                   Click="OnConfirmCandidateClick"
+                                   Content="确认候选" />
+                    </Grid>
+                    <ScrollViewer Grid.Row="2"
+                                  VerticalScrollBarVisibility="Auto">
+                        <TextBlock x:Name="DetailsText"
+                                   FontSize="12"
+                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                   LineHeight="19"
+                                   TextWrapping="Wrap" />
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <ui:Button Grid.Row="3"
+                   Margin="0,10,0,0"
+                   Padding="18,6"
+                   HorizontalAlignment="Right"
+                   Appearance="Secondary"
+                   Click="OnCloseClick"
+                   Content="关闭" />
+    </Grid>
+</Window>
