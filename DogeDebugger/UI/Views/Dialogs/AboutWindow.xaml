@@ -51,8 +51,8 @@
                         BorderBrush="#70FFFFFF"
                         BorderThickness="1"
                         CornerRadius="18">
-                    <Image Width="72"
-                           Height="72"
+                    <Image Width="64"
+                           Height="64"
                            Source="pack://application:,,,/DogeDebugger.About.png"
                            Stretch="Uniform" />
                 </Border>

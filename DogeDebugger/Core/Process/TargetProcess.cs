@@ -41,6 +41,32 @@ public sealed class TargetProcess : ITargetProcess
 
     public bool IsDebugging => _isDebugging;
 
+    public bool TrySuspendProcess(out int status)
+    {
+        ThrowIfDisposed();
+        if (!IsOpen)
+        {
+            status = -1;
+            return false;
+        }
+
+        status = NativeMethods.NtSuspendProcess(Handle);
+        return status >= 0;
+    }
+
+    public bool TryResumeProcess(out int status)
+    {
+        ThrowIfDisposed();
+        if (!IsOpen)
+        {
+            status = -1;
+            return false;
+        }
+
+        status = NativeMethods.NtResumeProcess(Handle);
+        return status >= 0;
+    }
+
     public event PropertyChangedEventHandler? PropertyChanged;
 
     public event Action<ITargetProcess>? Opened;
@@ -231,6 +257,27 @@ public sealed class TargetProcess : ITargetProcess
                 out UIntPtr bytesWritten) &&
                 bytesWritten == (nuint)bytes.Length;
         }
+    }
+
+    public bool TryChangeMemoryProtection(
+        ulong address,
+        ulong size,
+        uint newProtection,
+        out uint oldProtection)
+    {
+        ThrowIfDisposed();
+        oldProtection = 0;
+        if (!IsOpen || address == 0 || size == 0)
+        {
+            return false;
+        }
+
+        return NativeMethods.VirtualProtectEx(
+            Handle,
+            unchecked((UIntPtr)address),
+            unchecked((UIntPtr)size),
+            newProtection,
+            out oldProtection);
     }
 
     public void MarkDebuggerAttached()

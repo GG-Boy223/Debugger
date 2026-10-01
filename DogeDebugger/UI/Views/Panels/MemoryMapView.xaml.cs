@@ -17,15 +17,20 @@ public partial class MemoryMapView : UserControl
     {
         InitializeComponent();
         Loaded += OnLoaded;
+        RegionGrid.SizeChanged += OnRegionGridSizeChanged;
         DataContextChanged += OnDataContextChanged;
     }
 
     private void OnLoaded(object sender, RoutedEventArgs eventArgs)
     {
         AttachView();
+        ApplyColumnWidths();
         Dispatcher.BeginInvoke(
             DispatcherPriority.Loaded,
             ReportColumnWidths);
+        Dispatcher.BeginInvoke(
+            DispatcherPriority.Loaded,
+            new Action(ApplyColumnWidths));
     }
 
     private void OnDataContextChanged(
@@ -46,6 +51,39 @@ public partial class MemoryMapView : UserControl
         _view.Filter = FilterRegion;
         ApplyGrouping();
         _view.Refresh();
+    }
+
+    private void ApplyColumnWidths()
+    {
+        double[] widths = [160, 130, 80, 140, 80, 120, 140, 100];
+        for (int index = 0;
+             index < widths.Length && index < RegionGrid.Columns.Count;
+             index++)
+        {
+            DataGridColumn column = RegionGrid.Columns[index];
+            column.MinWidth = widths[index];
+            column.Width = new DataGridLength(widths[index]);
+        }
+
+        if (RegionGrid.Columns.Count > widths.Length)
+        {
+            DataGridColumn column = RegionGrid.Columns[^1];
+            column.MinWidth = 100;
+            column.Width =
+                new DataGridLength(
+                    1,
+                    DataGridLengthUnitType.Star);
+        }
+    }
+
+    private void OnRegionGridSizeChanged(
+        object sender,
+        SizeChangedEventArgs eventArgs)
+    {
+        if (eventArgs.NewSize.Width > 100)
+        {
+            ApplyColumnWidths();
+        }
     }
 
     private void OnFilterChanged(object sender, RoutedEventArgs eventArgs)

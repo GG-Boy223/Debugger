@@ -10,15 +10,14 @@
         WindowStartupLocation="CenterOwner"
         ResizeMode="CanResize"
         ShowInTaskbar="False">
-    <Grid Margin="20">
+    <Grid Margin="12,8,12,10">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <Grid Grid.Row="0" Margin="0,0,0,10">
+        <Grid Grid.Row="0" Margin="0,0,0,8">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
@@ -31,13 +30,15 @@
                         TextChanged="OnSearchTextChanged" />
             <ui:Button Grid.Column="1"
                        Width="46"
+                       Height="27"
                        Margin="8,0,0,0"
                        Padding="0"
                        Click="OnSelectAllClick"
                        Content="全选" />
             <ui:Button Grid.Column="2"
                        Width="70"
-                       Margin="6,0,0,0"
+                       Height="27"
+                       Margin="4,0,0,0"
                        Padding="0"
                        Click="OnClearSelectionClick"
                        Content="取消全选" />
@@ -62,9 +63,9 @@
                 <DataTemplate>
                     <Grid Height="40" Margin="6,0,4,0">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="24" />
-                            <ColumnDefinition Width="180" />
-                            <ColumnDefinition Width="120" />
+                            <ColumnDefinition Width="35" />
+                            <ColumnDefinition Width="190" />
+                            <ColumnDefinition Width="98" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
                         <CheckBox Grid.Column="0"
@@ -125,22 +126,30 @@
             </ListView.ItemTemplate>
         </ListView>
 
-        <TextBlock x:Name="SelectionText"
-                   Grid.Row="2"
-                   Margin="2,9,0,9"
-                   Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-
-        <StackPanel Grid.Row="3"
-                    HorizontalAlignment="Right"
-                    Orientation="Horizontal">
-            <ui:Button MinWidth="88"
-                       Appearance="Primary"
-                       Click="OnConfirmClick"
-                       Content="确定" />
-            <ui:Button MinWidth="88"
-                       Margin="8,0,0,0"
-                       Click="OnCancelClick"
-                       Content="取消" />
-        </StackPanel>
+        <Grid Grid.Row="2"
+              Margin="0,7,0,0">
+            <TextBlock x:Name="SelectionText"
+                       Margin="0,1,0,0"
+                       HorizontalAlignment="Left"
+                       VerticalAlignment="Center"
+                       Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+            <StackPanel HorizontalAlignment="Right"
+                        Orientation="Horizontal">
+                <ui:Button Width="58"
+                           Height="29"
+                           Padding="0"
+                           FontSize="11"
+                           Appearance="Primary"
+                           Click="OnConfirmClick"
+                           Content="确定" />
+                <ui:Button Width="58"
+                           Height="29"
+                           Margin="8,0,0,0"
+                           Padding="0"
+                           FontSize="11"
+                           Click="OnCancelClick"
+                           Content="取消" />
+            </StackPanel>
+        </Grid>
     </Grid>
 </Window>

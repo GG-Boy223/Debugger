@@ -3,6 +3,252 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
              xmlns:controls="clr-namespace:DogeDebugger.UI.Controls">
+    <UserControl.Resources>
+        <ContextMenu x:Key="SingleLineContextMenu"
+                     Opened="OnSingleLineContextMenuOpened">
+            <MenuItem Header="跳转到地址(_G)"
+                      InputGestureText="Ctrl+G"
+                      Click="OnJumpToAddressClick" />
+            <MenuItem Header="跟随跳转目标(_F)"
+                      InputGestureText="Enter"
+                      Click="OnFollowBranchClick" />
+            <MenuItem Header="返回上一位置(_B)"
+                      InputGestureText="-"
+                      Click="OnGoBackClick" />
+            <MenuItem x:Name="SetBookmarkMenu"
+                      Header="设置/取消 书签">
+                <MenuItem Header="书签 0" Tag="0" Click="OnToggleBookmarkClick" />
+                <MenuItem Header="书签 1" Tag="1" Click="OnToggleBookmarkClick" />
+                <MenuItem Header="书签 2" Tag="2" Click="OnToggleBookmarkClick" />
+                <MenuItem Header="书签 3" Tag="3" Click="OnToggleBookmarkClick" />
+                <MenuItem Header="书签 4" Tag="4" Click="OnToggleBookmarkClick" />
+                <MenuItem Header="书签 5" Tag="5" Click="OnToggleBookmarkClick" />
+                <MenuItem Header="书签 6" Tag="6" Click="OnToggleBookmarkClick" />
+                <MenuItem Header="书签 7" Tag="7" Click="OnToggleBookmarkClick" />
+                <MenuItem Header="书签 8" Tag="8" Click="OnToggleBookmarkClick" />
+                <MenuItem Header="书签 9" Tag="9" Click="OnToggleBookmarkClick" />
+            </MenuItem>
+            <MenuItem x:Name="GoToBookmarkMenu"
+                      Header="跳转书签">
+                <MenuItem Header="书签 0" Tag="0" Click="OnGoToBookmarkClick" />
+                <MenuItem Header="书签 1" Tag="1" Click="OnGoToBookmarkClick" />
+                <MenuItem Header="书签 2" Tag="2" Click="OnGoToBookmarkClick" />
+                <MenuItem Header="书签 3" Tag="3" Click="OnGoToBookmarkClick" />
+                <MenuItem Header="书签 4" Tag="4" Click="OnGoToBookmarkClick" />
+                <MenuItem Header="书签 5" Tag="5" Click="OnGoToBookmarkClick" />
+                <MenuItem Header="书签 6" Tag="6" Click="OnGoToBookmarkClick" />
+                <MenuItem Header="书签 7" Tag="7" Click="OnGoToBookmarkClick" />
+                <MenuItem Header="书签 8" Tag="8" Click="OnGoToBookmarkClick" />
+                <MenuItem Header="书签 9" Tag="9" Click="OnGoToBookmarkClick" />
+            </MenuItem>
+            <Separator />
+            <MenuItem Header="修改汇编指令(_A)"
+                      InputGestureText="Space"
+                      Click="OnAssembleClick" />
+            <MenuItem x:Name="NopFillMenu"
+                      Header="NOP 填充(_N)"
+                      InputGestureText="Ctrl+N"
+                      Click="OnNopFillClick" />
+            <MenuItem x:Name="UndoNopMenu"
+                      Header="撤销 NOP"
+                      Visibility="Collapsed"
+                      Click="OnUndoNopClick" />
+            <MenuItem Header="编辑注释(_C)"
+                      InputGestureText=";"
+                      Click="OnEditCommentClick" />
+            <MenuItem x:Name="EditCustomSymbolMenu"
+                      Header="自定义符号(_Y)"
+                      InputGestureText=":"
+                      Click="OnEditCustomSymbolClick" />
+            <MenuItem Header="删除自定义符号"
+                      Visibility="Collapsed"
+                      Click="OnDeleteCustomSymbolClick" />
+            <Separator />
+            <MenuItem x:Name="ToggleBreakpointMenu"
+                      Header="切换断点(_T)"
+                      InputGestureText="F2"
+                      Click="OnToggleBreakpointClick" />
+            <MenuItem x:Name="DeleteBreakpointMenu"
+                      Header="删除断点"
+                      Click="OnDeleteBreakpointClick" />
+            <MenuItem Header="设置硬件断点">
+                <MenuItem Header="执行"
+                          Tag="HardwareExecute"
+                          Click="OnHardwareBreakpointClick" />
+                <MenuItem Header="写入"
+                          Tag="HardwareWrite"
+                          Click="OnHardwareBreakpointClick" />
+                <MenuItem Header="访问"
+                          Tag="HardwareReadWrite"
+                          Click="OnHardwareBreakpointClick" />
+                <Separator />
+                <MenuItem Header="执行 + 条件"
+                          Tag="HardwareExecute"
+                          Click="OnHardwareBreakpointWithConditionClick" />
+                <MenuItem Header="写入 + 条件"
+                          Tag="HardwareWrite"
+                          Click="OnHardwareBreakpointWithConditionClick" />
+                <MenuItem Header="访问 + 条件"
+                          Tag="HardwareReadWrite"
+                          Click="OnHardwareBreakpointWithConditionClick" />
+            </MenuItem>
+            <MenuItem Header="设置条件断点(_C)"
+                      InputGestureText="Shift+F2"
+                      Click="OnEditConditionClick" />
+            <MenuItem x:Name="SetInstructionPointerMenu"
+                      Tag="SetInstructionPointer"
+                      Header="在此设置RIP"
+                      InputGestureText="Ctrl+*"
+                      Click="OnSetInstructionPointerClick" />
+            <Separator />
+            <MenuItem Header="复制">
+                <MenuItem Header="复制地址"
+                          Tag="Address"
+                          Click="OnCopyClick" />
+                <MenuItem Header="复制绝对地址"
+                          Tag="AbsoluteAddress"
+                          Click="OnCopyClick" />
+                <MenuItem Header="复制 RVA"
+                          Tag="Rva"
+                          Click="OnCopyClick" />
+                <MenuItem Header="复制反汇编"
+                          Tag="Disassembly"
+                          Click="OnCopyClick" />
+                <MenuItem Header="复制字节码"
+                          Tag="Bytes"
+                          Click="OnCopyClick" />
+                <MenuItem Header="复制整行"
+                          Tag="Line"
+                          Click="OnCopyClick" />
+            </MenuItem>
+            <Separator />
+            <MenuItem x:Name="FindInstructionAccessesMenu"
+                      Header="找出指令访问的地址"
+                      Visibility="Collapsed"
+                      Click="OnFindInstructionAccessClick" />
+            <MenuItem Header="搜索指令(_S)..."
+                      Click="OnSearchInstructionClick" />
+            <MenuItem x:Name="FindReferencesMenu"
+                      Header="查找引用：地址"
+                      InputGestureText="Ctrl+R"
+                      Click="OnFindReferencesClick" />
+            <MenuItem Header="分析函数边界">
+                <MenuItem Header="选中当前函数"
+                          Click="OnSelectCurrentFunctionClick" />
+                <MenuItem Header="跳转到函数头"
+                          Click="OnGoToFunctionStartClick" />
+                <MenuItem Header="跳转到函数尾"
+                          Click="OnGoToFunctionEndClick" />
+            </MenuItem>
+            <MenuItem Header="特征码">
+                <MenuItem Header="搜索特征码(S)..."
+                          Click="OnSearchSignatureClick" />
+                <MenuItem Header="生成特征码"
+                          Click="OnGenerateSignatureClick" />
+                <MenuItem Header="生成并搜索"
+                          Click="OnGenerateAndSearchSignatureClick" />
+            </MenuItem>
+            <Separator />
+            <MenuItem Header="显示">
+                <MenuItem Header="地址显示模式">
+                    <MenuItem x:Name="AddressAbsoluteMenu"
+                              Header="绝对地址"
+                              Tag="Absolute"
+                              IsCheckable="True"
+                              Click="OnAddressModeClick" />
+                    <MenuItem x:Name="AddressRvaMenu"
+                              Header="RVA"
+                              Tag="Rva"
+                              IsCheckable="True"
+                              Click="OnAddressModeClick" />
+                    <MenuItem x:Name="AddressModuleMenu"
+                              Header="模块+偏移"
+                              Tag="ModuleOffset"
+                              IsCheckable="True"
+                              Click="OnAddressModeClick" />
+                </MenuItem>
+                <MenuItem x:Name="ShowBytesMenu"
+                          Header="显示字节码"
+                          IsCheckable="True"
+                          Click="OnToggleShowBytesClick" />
+                <MenuItem Header="字节码样式">
+                    <MenuItem x:Name="BytesStyleX64DbgMenu"
+                              Header="x64dbg 风格"
+                              Tag="X64Dbg"
+                              IsCheckable="True"
+                              Click="OnBytesStyleClick" />
+                    <MenuItem x:Name="BytesStyleCeMenu"
+                              Header="CE 风格"
+                              Tag="CheatEngine"
+                              IsCheckable="True"
+                              Click="OnBytesStyleClick" />
+                </MenuItem>
+                <MenuItem Header="语法格式">
+                    <MenuItem x:Name="SyntaxIntelMenu"
+                              Header="Intel"
+                              Tag="Intel"
+                              IsCheckable="True"
+                              Click="OnSyntaxClick" />
+                    <MenuItem x:Name="SyntaxMasmMenu"
+                              Header="MASM"
+                              Tag="Masm"
+                              IsCheckable="True"
+                              Click="OnSyntaxClick" />
+                    <MenuItem x:Name="SyntaxNasmMenu"
+                              Header="NASM"
+                              Tag="Nasm"
+                              IsCheckable="True"
+                              Click="OnSyntaxClick" />
+                    <MenuItem x:Name="SyntaxGasMenu"
+                              Header="AT&amp;T (GAS)"
+                              Tag="Gas"
+                              IsCheckable="True"
+                              Click="OnSyntaxClick" />
+                </MenuItem>
+                <MenuItem x:Name="SignedImmediateMenu"
+                          Header="立即数带符号显示"
+                          IsCheckable="True"
+                          Click="OnToggleSignedImmediateClick" />
+                <Separator />
+                <MenuItem x:Name="JumpArrowsMenu"
+                          Header="显示跳转箭头"
+                          IsCheckable="True"
+                          Click="OnToggleJumpArrowsClick" />
+            </MenuItem>
+        </ContextMenu>
+
+        <ContextMenu x:Key="MultiLineContextMenu"
+                     Opened="OnMultiLineContextMenuOpened">
+            <MenuItem x:Name="MultiSelectionHeader"
+                      IsEnabled="False"
+                      Header="已选择 0 行" />
+            <Separator />
+            <MenuItem Header="搜索指令(S)..."
+                      Click="OnSearchInstructionClick" />
+            <MenuItem Header="特征码">
+                <MenuItem Header="生成特征码"
+                          Click="OnGenerateSignatureClick" />
+                <MenuItem Header="生成并搜索"
+                          Click="OnGenerateAndSearchSignatureClick" />
+            </MenuItem>
+            <MenuItem Header="复制">
+                <MenuItem Header="复制地址" Tag="Address" Click="OnCopyClick" />
+                <MenuItem Header="复制绝对地址" Tag="AbsoluteAddress" Click="OnCopyClick" />
+                <MenuItem Header="复制 RVA" Tag="Rva" Click="OnCopyClick" />
+                <MenuItem Header="复制反汇编" Tag="Disassembly" Click="OnCopyClick" />
+                <MenuItem Header="复制字节码" Tag="Bytes" Click="OnCopyClick" />
+                <MenuItem Header="复制整行" Tag="Line" Click="OnCopyClick" />
+            </MenuItem>
+            <MenuItem Header="NOP 填充选中区域(N)"
+                      Click="OnNopFillClick" />
+            <MenuItem Header="AI 分析选中代码"
+                      Click="OnAiAnalyzeSelectedCodeClick" />
+            <MenuItem x:Name="MultiUndoNopMenu"
+                      Header="撤销 NOP"
+                      Click="OnUndoNopClick" />
+        </ContextMenu>
+    </UserControl.Resources>
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -47,17 +293,29 @@
                   IsReadOnly="True"
                   CanUserAddRows="False"
                   CanUserDeleteRows="False"
-                  HeadersVisibility="Column"
+                  SelectionMode="Extended"
+                  SelectionUnit="FullRow"
+                  HeadersVisibility="None"
                   ColumnHeaderHeight="32"
-                  GridLinesVisibility="Horizontal"
+                  GridLinesVisibility="None"
+                  RowHeight="19"
+                  AlternatingRowBackground="#FFF8FAFD"
                   EnableRowVirtualization="True"
                   VirtualizingPanel.IsVirtualizing="True"
                   VirtualizingPanel.VirtualizationMode="Recycling"
                   BorderThickness="0"
                   Background="Transparent"
                   FontFamily="Cascadia Code, Consolas, monospace"
-                  FontSize="12"
-                  MouseDoubleClick="OnInstructionGridDoubleClick">
+                  FontSize="11"
+                  MouseDoubleClick="OnInstructionGridDoubleClick"
+                  PreviewMouseRightButtonDown="OnInstructionGridPreviewMouseRightButtonDown">
+            <DataGrid.Resources>
+                <Style TargetType="DataGridCell">
+                    <Setter Property="Padding" Value="5,0" />
+                    <Setter Property="BorderThickness" Value="0" />
+                    <Setter Property="VerticalContentAlignment" Value="Center" />
+                </Style>
+            </DataGrid.Resources>
             <DataGrid.RowStyle>
                 <Style TargetType="DataGridRow">
                     <Setter Property="Foreground" Value="#E4000000" />
@@ -71,33 +329,59 @@
                 </Style>
             </DataGrid.RowStyle>
             <DataGrid.Columns>
-                <DataGridTextColumn Header="地址"
-                                    Binding="{Binding AddressText}"
-                                    Width="190" />
-                <DataGridTextColumn Header="字节"
-                                    Binding="{Binding BytesText}"
-                                    Width="100" />
-                <DataGridTemplateColumn Header="指令"
-                                        Width="360">
+                <DataGridTemplateColumn x:Name="ArrowColumn"
+                                        Header="箭头"
+                                        Width="18">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <TextBlock>
+                            <TextBlock HorizontalAlignment="Center"
+                                       FontSize="10"
+                                       Text="{Binding MarkerText}">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="#FF7A7A7A" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsBreakpoint}"
+                                                         Value="True">
+                                                <Setter Property="Foreground" Value="#FFE53935" />
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding IsInstructionPointer}"
+                                                         Value="True">
+                                                <Setter Property="Foreground" Value="#FF23A455" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTextColumn x:Name="AddressColumn"
+                                    Header="地址"
+                                    Binding="{Binding AddressText}"
+                                    Width="165" />
+                <DataGridTextColumn x:Name="BytesColumn"
+                                    Header="字节"
+                                    Binding="{Binding BytesText}"
+                                    Width="150" />
+                <DataGridTemplateColumn Header="指令"
+                                        Width="*">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock ToolTip="{Binding Comment}">
                                 <Run Foreground="#FF0000A8"
                                      FontWeight="SemiBold"
                                      Text="{Binding Mnemonic}" />
                                 <Run Text=" " />
                                 <Run Foreground="#FF333333"
                                      Text="{Binding Operands}" />
+                                <Run Foreground="#FF008000"
+                                     Text="{Binding CommentText, Mode=OneWay}" />
                             </TextBlock>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTextColumn Header="注释"
-                                    Binding="{Binding FlowControl}"
-                                    Width="180" />
             </DataGrid.Columns>
         </DataGrid>
-        <controls:PanelProcessOverlay Grid.Row="0"
-                                      Grid.RowSpan="2" />
     </Grid>
 </UserControl>

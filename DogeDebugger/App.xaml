@@ -18,7 +18,6 @@
             <Style TargetType="Button">
                 <Setter Property="Padding" Value="10,4" />
                 <Setter Property="Margin" Value="0,0,4,0" />
-                <Setter Property="MinWidth" Value="60" />
             </Style>
             <Style TargetType="TextBox">
                 <Setter Property="Padding" Value="5,3" />
@@ -26,6 +25,14 @@
             </Style>
             <Style TargetType="ComboBox">
                 <Setter Property="Margin" Value="0,0,4,0" />
+            </Style>
+            <Style TargetType="ContextMenu">
+                <Setter Property="FontFamily" Value="{DynamicResource AppUiFontFamily}" />
+                <Setter Property="FontSize" Value="{DynamicResource AppUiFontSize}" />
+            </Style>
+            <Style TargetType="MenuItem">
+                <Setter Property="FontFamily" Value="{DynamicResource AppUiFontFamily}" />
+                <Setter Property="FontSize" Value="{DynamicResource AppUiFontSize}" />
             </Style>
         </ResourceDictionary>
     </Application.Resources>

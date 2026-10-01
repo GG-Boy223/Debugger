@@ -12,8 +12,8 @@ public partial class AboutWindow : FluentWindow
     {
         InitializeComponent();
 
-        VersionText.Text = $"v{ProductVersion}";
-        VersionDetailText.Text = $"DogeDebugger v{ProductVersion}";
+        VersionText.Text = $"v{ProductVersion}（本地免登录）";
+        VersionDetailText.Text = $"DogeDebugger v{ProductVersion}（本地免登录）";
         FrameworkText.Text = RuntimeInformation.FrameworkDescription;
         OperatingSystemText.Text = $"Windows {Environment.OSVersion.Version}";
         ArchitectureText.Text = RuntimeInformation.ProcessArchitecture.ToString();

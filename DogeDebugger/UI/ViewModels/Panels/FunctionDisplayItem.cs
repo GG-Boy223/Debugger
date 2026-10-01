@@ -16,6 +16,8 @@ public sealed record FunctionDisplayItem(
 
     public string StartRvaHex => $"+{StartRva:X}";
 
+    public string StartVaHex => $"{StartVa:X}";
+
     public string SourceTag => Source switch
     {
         FunctionSource.Pdata => "pdata",

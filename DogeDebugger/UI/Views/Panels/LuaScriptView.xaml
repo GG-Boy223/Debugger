@@ -158,6 +158,7 @@
                          Margin="4,0,4,4"
                          Background="Transparent"
                          ItemsSource="{Binding LuaApiEntries}"
+                         SelectedIndex="0"
                          MouseDoubleClick="OnApiListMouseDoubleClick"
                          ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                     <ListBox.ItemTemplate>

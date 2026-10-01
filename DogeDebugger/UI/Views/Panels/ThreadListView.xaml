@@ -18,6 +18,7 @@
                 <StackPanel DockPanel.Dock="Left"
                             Orientation="Horizontal">
                     <ui:Button Appearance="Primary"
+                               Width="63"
                                FontSize="11"
                                Padding="10,3"
                                Margin="0,0,4,0"
@@ -79,7 +80,9 @@
                   CanUserAddRows="False"
                   CanUserDeleteRows="False"
                   CanUserSortColumns="True"
-                  HeadersVisibility="Column"
+                  HeadersVisibility="All"
+                  RowHeaderWidth="24"
+                  RowHeight="26"
                   ColumnHeaderHeight="32"
                   GridLinesVisibility="Horizontal"
                   EnableRowVirtualization="True"
@@ -106,25 +109,23 @@
                 <DataGridTextColumn Header="线程ID"
                                     Binding="{Binding ThreadId}"
                                     Width="80" />
-                <DataGridTextColumn Header="名称"
-                                    Binding="{Binding Name}"
+                <DataGridTextColumn Header="入口"
+                                    Binding="{Binding EntryText}"
                                     Width="220" />
                 <DataGridTextColumn Header="TEB"
                                     Binding="{Binding TebBaseAddressText}"
                                     Width="150" />
-                <DataGridTextColumn Header="起始地址"
-                                    Binding="{Binding StartAddressText}"
+                <DataGridTextColumn Header="优先级"
+                                    Binding="{Binding BasePriorityText}"
                                     Width="80" />
                 <DataGridTextColumn Header="挂起计数"
                                     Binding="{Binding SuspendCountText}"
                                     Width="80" />
                 <DataGridTextColumn Header="状态"
+                                    Binding="{Binding StatusText}"
                                     Width="80" />
-                <DataGridTextColumn Header="优先级"
-                                    Binding="{Binding BasePriorityText}"
-                                    Width="80" />
-                <DataGridTextColumn Header="当前指令"
-                                    Binding="{Binding InstructionPointerText}"
+                <DataGridTextColumn Header="名称"
+                                    Binding="{Binding Name}"
                                     Width="*" />
             </DataGrid.Columns>
             <DataGrid.ContextMenu>

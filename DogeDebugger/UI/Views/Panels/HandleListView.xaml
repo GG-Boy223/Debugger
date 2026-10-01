@@ -18,8 +18,10 @@
                 <StackPanel DockPanel.Dock="Left"
                             Orientation="Horizontal">
                     <ui:Button Appearance="Primary"
+                               Width="59"
+                               Height="22"
                                FontSize="11"
-                               Padding="10,3"
+                               Padding="7,2"
                                Margin="0,0,6,0"
                                Command="{Binding RefreshTargetPanelsCommand}">
                         <StackPanel Orientation="Horizontal">
@@ -29,26 +31,26 @@
                         </StackPanel>
                     </ui:Button>
                     <CheckBox x:Name="NamedOnlyCheck"
+                              Width="170"
                               Margin="0,0,8,0"
                               VerticalAlignment="Center"
                               Checked="OnFilterChanged"
                               Unchecked="OnFilterChanged"
                               Content="仅显示有名称的句柄" />
-                    <ProgressBar Width="180"
-                                 Height="3"
-                                 VerticalAlignment="Center"
-                                 Maximum="1"
-                                 Value="0" />
                 </StackPanel>
                 <TextBlock DockPanel.Dock="Right"
                            HorizontalAlignment="Right"
                            VerticalAlignment="Center"
                            FontSize="11"
                            Foreground="{DynamicResource TextFillColorSecondaryBrush}">
-                    <Run Text="句柄数: " />
-                    <Run FontWeight="SemiBold"
-                         Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-                         Text="{Binding Handles.Count, Mode=OneWay}" />
+                    <Run Text="句柄数:  " />
+                    <Run x:Name="HandleViewCountRun"
+                         FontWeight="SemiBold"
+                         Text="0" />
+                    <Run Text="  /  " />
+                    <Run x:Name="HandleTotalCountRun"
+                         FontWeight="SemiBold"
+                         Text="0" />
                 </TextBlock>
                 <Border />
             </DockPanel>
@@ -75,29 +77,24 @@
                   FontSize="12"
                   MouseDoubleClick="OnHandleGridDoubleClick">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="句柄"
-                                    Binding="{Binding HandleValueText}"
-                                    Width="90" />
                 <DataGridTextColumn Header="类型"
                                     Binding="{Binding TypeName}"
-                                    Width="100" />
+                                    Width="110" />
                 <DataGridTextColumn Header="名称"
                                     Binding="{Binding Name}"
-                                    Width="320" />
+                                    Width="1000" />
                 <DataGridTextColumn Header="值"
                                     Binding="{Binding ObjectAddressText}"
-                                    Width="145" />
-                <DataGridTextColumn Header="对象地址"
-                                    Binding="{Binding ObjectAddressText}"
-                                    Width="145" />
+                                    Width="90" />
                 <DataGridTextColumn Header="访问权限"
                                     Binding="{Binding GrantedAccessText}"
-                                    Width="115" />
+                                    Width="110" />
             </DataGrid.Columns>
         </DataGrid>
 
         <Border Grid.Row="2"
-                Padding="6,4"
+                Height="45"
+                Padding="6,7"
                 BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
                 BorderThickness="0,1,0,0"
                 Background="{DynamicResource SubtleFillColorSecondaryBrush}">
@@ -108,14 +105,15 @@
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <ComboBox Grid.Column="0"
-                          Height="28"
+                          Width="120"
+                          Height="32"
                           Margin="0,0,4,0">
-                    <ComboBoxItem Content="全部类型"
+                    <ComboBoxItem Content="所有"
                                   IsSelected="True" />
                 </ComboBox>
                 <TextBox x:Name="HandleSearchBox"
                          Grid.Column="1"
-                         Height="28"
+                         Height="32"
                          Padding="6,2"
                          TextChanged="OnFilterChanged" />
                 <StackPanel Grid.Column="2"
@@ -123,11 +121,10 @@
                             Orientation="Horizontal"
                             VerticalAlignment="Center">
                     <CheckBox Margin="0,0,12,0"
-                              IsEnabled="False"
                               Content="正则" />
                     <TextBlock FontSize="11"
                                Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                               Text="复制失败: 0   名称超时: 0" />
+                               Text="复制失败:  0   名称超时:  0   名称失败:  0" />
                 </StackPanel>
             </Grid>
         </Border>

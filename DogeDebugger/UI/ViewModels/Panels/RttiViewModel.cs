@@ -29,7 +29,7 @@ public partial class RttiViewModel : ObservableObject, IDisposable
     private RttiFieldValue? _selectedField;
 
     [ObservableProperty]
-    private string _addressText = "0";
+    private string _addressText = "0x140000000";
 
     [ObservableProperty]
     private string _statusText = "尚未扫描 RTTI 类型。";
@@ -76,6 +76,12 @@ public partial class RttiViewModel : ObservableObject, IDisposable
         StatusText = _session.Target.IsOpen
             ? "目标进程已切换，请重新读取 RTTI 结构。"
             : "尚未打开目标进程。";
+    }
+
+    public void NavigateToAddress(ulong address)
+    {
+        AddressText = $"0x{address:X}";
+        StatusText = $"已定位到指令访问地址 0x{address:X}。";
     }
 
     public void Dispose()

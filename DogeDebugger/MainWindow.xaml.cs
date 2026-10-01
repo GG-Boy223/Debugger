@@ -12,6 +12,7 @@ using AvalonDock;
 using AvalonDock.Layout;
 using AvalonDock.Layout.Serialization;
 using DogeDebugger.Debugger.Plugins;
+using DogeDebugger.Core.Disassembly;
 using DogeDebugger.Core.Settings;
 using DogeDebugger.Core.Trace;
 using DogeDebugger.PluginSdk;
@@ -30,7 +31,7 @@ public partial class MainWindow : FluentWindow
     private static readonly string? DiagnosticLogPath =
         Environment.GetEnvironmentVariable("DOGEDEBUGGER_DIAGNOSTIC_LOG");
 
-    private const int CurrentLayoutVersion = 5_000_002;
+    private const int CurrentLayoutVersion = 5_000_004;
 
     private static readonly HashSet<string> NonPersistedPanelIds =
         new(StringComparer.OrdinalIgnoreCase)
@@ -106,6 +107,94 @@ public partial class MainWindow : FluentWindow
             Owner = this
         };
         window.Show();
+    }
+
+    internal void OpenAiAssistantWithPrompt(string prompt)
+    {
+        if (DataContext is not MainViewModel viewModel)
+        {
+            return;
+        }
+
+        AiAssistantWindow window = new(viewModel.Settings.Current)
+        {
+            Owner = this
+        };
+        if (window.DataContext is DogeDebugger.UI.ViewModels.Dialogs.AiAssistantViewModel assistant)
+        {
+            assistant.Prompt = prompt;
+        }
+
+        window.Show();
+    }
+
+    internal void OpenInstructionAccessWatch(
+        MainViewModel viewModel,
+        InstructionSnapshot instruction,
+        InstructionMemoryOperand operand)
+    {
+        TraceUiInteraction(
+            $"OpenInstructionAccessWatch begin address=0x{instruction.Address:X}");
+        try
+        {
+            InstructionAccessWatchWindow window = new(
+                viewModel.Session,
+                instruction,
+                operand,
+                viewModel.IsTarget64Bit ? 64 : 32,
+                address =>
+                {
+                    ShowHexPanel();
+                    _ = viewModel.NavigateToAddressAsync(address);
+                },
+                address =>
+                {
+                    ShowDocument(RttiDocument);
+                    viewModel.RttiPanel.NavigateToAddress(address);
+                },
+                item =>
+                {
+                    ShowDocument(MonoExplorerDocument);
+                    viewModel.MonoPanel.NavigateToInstanceAddress(
+                        item.MonoBaseAddress,
+                        item.MonoBaseRegisterName);
+                },
+                () => viewModel.MonoPanel.IsConnected)
+            {
+                Owner = this
+            };
+            window.Show();
+            TraceUiInteraction(
+                $"OpenInstructionAccessWatch shown address=0x{instruction.Address:X}");
+        }
+        catch (Exception exception)
+        {
+            TraceUiInteraction(
+                $"OpenInstructionAccessWatch failed: {exception}");
+            throw;
+        }
+    }
+
+    internal static void TraceUiInteraction(string message)
+    {
+        string? path = Environment.GetEnvironmentVariable(
+            "DOGEDEBUGGER_UI_LOG");
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return;
+        }
+
+        try
+        {
+            File.AppendAllText(
+                path,
+                $"{DateTime.Now:O} {message}{Environment.NewLine}",
+                new System.Text.UTF8Encoding(
+                    encoderShouldEmitUTF8Identifier: false));
+        }
+        catch
+        {
+        }
     }
 
     private void OnMainDataContextChanged(
@@ -668,7 +757,11 @@ public partial class MainWindow : FluentWindow
                 settings.Current.LastActiveGroup)
                 ? (PanelGroup)settings.Current.LastActiveGroup
                 : PanelGroup.Debugging;
-            SwitchPanelGroup(restoredGroup);
+            SwitchPanelGroup(
+                restoredGroup,
+                restoredGroup == PanelGroup.Debugging
+                    ? DisassemblyDocument
+                    : null);
             ShowStartupPanelFromEnvironment();
             LayoutDocumentPane? activePane = GetActiveDocumentPane();
             if (activePane is null ||
@@ -917,7 +1010,8 @@ public partial class MainWindow : FluentWindow
     private void InitializePanelGroups()
     {
         CaptureKnownPanelDocuments();
-        SwitchPanelGroup(_activePanelGroup);
+        _lastSelectedPanelIds.Clear();
+        SwitchPanelGroup(_activePanelGroup, DisassemblyDocument);
     }
 
     private void CaptureKnownPanelDocuments()
@@ -1050,15 +1144,20 @@ public partial class MainWindow : FluentWindow
                 _lastSelectedPanelIds[_activePanelGroup] = selectedContentId;
             }
 
-            foreach (LayoutDocument document in pane.Children
-                         .OfType<LayoutDocument>()
+            foreach (LayoutDocument document in _knownPanelDocuments.Values
+                         .Distinct()
                          .ToArray())
             {
+                if (document.Parent is not LayoutDocumentPane currentPane)
+                {
+                    continue;
+                }
+
                 _detachedPanelDocuments.Add(new DetachedPanelDocument(
                     document,
-                    pane,
-                    pane.Children.IndexOf(document)));
-                pane.RemoveChild(document);
+                    currentPane,
+                    currentPane.Children.IndexOf(document)));
+                currentPane.RemoveChild(document);
             }
 
             _activePanelGroup = group;
@@ -1076,10 +1175,20 @@ public partial class MainWindow : FluentWindow
                     continue;
                 }
 
-                if (_knownPanelDocuments.TryGetValue(
+                if (!_knownPanelDocuments.TryGetValue(
                         descriptor.ContentId,
-                        out LayoutDocument? document) &&
-                    document.Parent is null)
+                        out LayoutDocument? document))
+                {
+                    continue;
+                }
+
+                if (document.Parent is LayoutDocumentPane otherPane &&
+                    !ReferenceEquals(otherPane, pane))
+                {
+                    otherPane.RemoveChild(document);
+                }
+
+                if (document.Parent is null)
                 {
                     pane.Children.Add(document);
                 }
@@ -1114,6 +1223,11 @@ public partial class MainWindow : FluentWindow
             {
                 target.IsSelected = true;
                 target.IsActive = true;
+                int targetIndex = pane.Children.IndexOf(target);
+                if (targetIndex >= 0)
+                {
+                    pane.SelectedContentIndex = targetIndex;
+                }
             }
 
             UpdatePanelGroupIndicators();
@@ -1207,9 +1321,9 @@ public partial class MainWindow : FluentWindow
         DisassemblyDocument = RegisterPanelDocument(
             "DisassemblyPanel",
             FindDocument("DisassemblyPanel") ?? DisassemblyDocument);
-        SourceDebugDocument = RegisterPanelDocument(
-            "SourceDebugPanel",
-            FindDocument("SourceDebugPanel") ?? SourceDebugDocument);
+        SourceDebugDocument = FindDocument("SourceDebugPanel") is { } sourceDebug
+            ? RegisterPanelDocument("SourceDebugPanel", sourceDebug)
+            : SourceDebugDocument;
         NotesDocument = RegisterPanelDocument(
             "NotesPanel",
             FindDocument("NotesPanel") ?? NotesDocument);
@@ -1255,9 +1369,9 @@ public partial class MainWindow : FluentWindow
         LogDocument = RegisterPanelDocument(
             "LogPanel",
             FindDocument("LogPanel") ?? LogDocument);
-        TraceResultDocument = RegisterPanelDocument(
-            "TraceResultPanel",
-            FindDocument("TraceResultPanel") ?? TraceResultDocument);
+        TraceResultDocument = FindDocument("TraceResultPanel") is { } traceResult
+            ? RegisterPanelDocument("TraceResultPanel", traceResult)
+            : TraceResultDocument;
         AutoAssemblerDocument = RegisterPanelDocument(
             "AutoAssemblerPanel",
             FindDocument("AutoAssemblerPanel") ?? AutoAssemblerDocument);
@@ -1355,11 +1469,6 @@ public partial class MainWindow : FluentWindow
             "LogPanel",
             "日志",
             LogDocument,
-            pane);
-        SourceDebugDocument = EnsureOptionalDocument(
-            "SourceDebugPanel",
-            "源码调试",
-            SourceDebugDocument,
             pane);
         StringReferencesDocument = EnsureOptionalDocument(
             "StringRefPanel",
@@ -1892,8 +2001,9 @@ public partial class MainWindow : FluentWindow
             return;
         }
 
-        System.Windows.Controls.TextBox sizeInput = new()
+        Wpf.Ui.Controls.TextBox sizeInput = new()
         {
+            ClearButtonEnabled = true,
             Text = "4096",
             Margin = new Thickness(0, 8, 0, 0)
         };
@@ -1978,6 +2088,7 @@ public partial class MainWindow : FluentWindow
             Title = title,
             Content = content,
             PrimaryButtonText = primaryButtonText,
+            PrimaryButtonAppearance = Wpf.Ui.Controls.ControlAppearance.Primary,
             SecondaryButtonText = secondaryButtonText,
             CloseButtonText = string.Empty,
             IsCloseButtonEnabled = false,
@@ -2017,8 +2128,9 @@ public partial class MainWindow : FluentWindow
         string defaultAddress = viewModel.SelectedInstruction is { Address: not 0 } instruction
             ? $"{instruction.Address:X}"
             : viewModel.AddressInput.Trim();
-        System.Windows.Controls.TextBox addressInput = new()
+        Wpf.Ui.Controls.TextBox addressInput = new()
         {
+            ClearButtonEnabled = true,
             Text = defaultAddress,
             Margin = new Thickness(0, 8, 0, 0)
         };
@@ -2223,11 +2335,23 @@ public partial class MainWindow : FluentWindow
             return;
         }
 
+        if (!viewModel.IsTargetOpen)
+        {
+            System.Windows.MessageBox.Show(
+                this,
+                "请先打开一个进程。",
+                "指针扫描",
+                System.Windows.MessageBoxButton.OK,
+                System.Windows.MessageBoxImage.Information);
+            return;
+        }
+
         PointerScanResultWindow window = new(viewModel)
         {
             Owner = this
         };
-        window.ShowDialog();
+        window.Show();
+        window.BeginNewScan();
     }
 
     private void OpenSignatureSearch()
@@ -2242,6 +2366,166 @@ public partial class MainWindow : FluentWindow
             Owner = this
         };
         window.ShowDialog();
+    }
+
+    internal void ShowCrossReferencesPanel() =>
+        ShowDocument(CrossReferencesDocument);
+
+    internal void ShowDisassemblyPanel() =>
+        ActivateDisassemblySection("DisassemblyView", "反汇编");
+
+    internal void ShowHexPanel() =>
+        ActivateDisassemblySection("HexView", "数据视图");
+
+    internal void OpenSignatureSearchWindow() =>
+        OpenSignatureSearch();
+
+    internal void OpenInstructionSearchWindow()
+    {
+        if (DataContext is not MainViewModel viewModel ||
+            viewModel.SelectedInstruction is not { Address: not 0 } instruction)
+        {
+            return;
+        }
+
+        InstructionSearchWindow window = new(
+            viewModel.Modules.ToArray(),
+            instruction.Text,
+            instruction.Address,
+            viewModel.IsTarget64Bit ? 64 : 32,
+            viewModel.DisassemblySyntax)
+        {
+            Owner = this
+        };
+        if (window.ShowDialog() != true || window.Request is not { } request)
+        {
+            return;
+        }
+
+        ShowInstructionSearchPanel();
+        _ = RunInstructionSearchAsync(viewModel, request);
+    }
+
+    private async Task RunInstructionSearchAsync(
+        MainViewModel viewModel,
+        CommandSearchRequest request)
+    {
+        try
+        {
+            await viewModel.RunInstructionSearchAsync(request);
+        }
+        catch (Exception exception)
+        {
+            viewModel.StatusText = exception.Message;
+        }
+    }
+
+    internal async Task RunInstructionReferenceSearchAsync(
+        MainViewModel viewModel,
+        InstructionReferenceSearchRequest request)
+    {
+        try
+        {
+            await viewModel.RunInstructionReferenceSearchAsync(request);
+        }
+        catch (Exception exception)
+        {
+            viewModel.StatusText = exception.Message;
+        }
+    }
+
+    internal void ShowInstructionSearchPanel(string title = "指令搜索")
+    {
+        if (DataContext is not MainViewModel viewModel)
+        {
+            return;
+        }
+
+        LayoutAnchorable? anchorable = DisasmDockManager.Layout
+            .Descendents()
+            .OfType<LayoutAnchorable>()
+            .FirstOrDefault(candidate => string.Equals(
+                candidate.ContentId,
+                "InstructionSearchView",
+                StringComparison.OrdinalIgnoreCase));
+        if (anchorable is null)
+        {
+            LayoutAnchorablePane? pane = DisasmDockManager.Layout
+                .Descendents()
+                .OfType<LayoutAnchorablePane>()
+                .FirstOrDefault(candidate => candidate.Children.Any(child =>
+                    ReferenceEquals(child.Content, DisassemblyViewControl) ||
+                    string.Equals(
+                        child.ContentId,
+                        "DisassemblyView",
+                        StringComparison.OrdinalIgnoreCase)));
+            pane ??= FindVisualAncestor<LayoutAnchorable>(
+                    DisassemblyViewControl)
+                ?.Parent as LayoutAnchorablePane;
+            pane ??= DisasmDockManager.Layout
+                .Descendents()
+                .OfType<LayoutAnchorablePane>()
+                .FirstOrDefault();
+            if (pane is null)
+            {
+                return;
+            }
+
+            anchorable = new LayoutAnchorable
+            {
+                Title = title,
+                ContentId = "InstructionSearchView",
+                CanClose = true,
+                CanHide = true,
+                CanFloat = true,
+                Content = new DogeDebugger.UI.Views.Panels.InstructionSearchView
+                {
+                    DataContext = viewModel.InstructionSearchPanel
+                }
+            };
+            pane.Children.Add(anchorable);
+        }
+        else if (anchorable.Content is null)
+        {
+            anchorable.Content =
+                new DogeDebugger.UI.Views.Panels.InstructionSearchView
+                {
+                    DataContext = viewModel.InstructionSearchPanel
+                };
+        }
+
+        if (anchorable.Title != title)
+        {
+            anchorable.Title = title;
+        }
+
+        anchorable.Show();
+        anchorable.IsSelected = true;
+        anchorable.IsActive = true;
+        if (anchorable.Parent is LayoutAnchorablePane parentPane)
+        {
+            int index = parentPane.Children.IndexOf(anchorable);
+            if (index >= 0)
+            {
+                parentPane.SelectedContentIndex = index;
+            }
+        }
+    }
+
+    private static T? FindVisualAncestor<T>(DependencyObject? element)
+        where T : DependencyObject
+    {
+        while (element is not null)
+        {
+            if (element is T match)
+            {
+                return match;
+            }
+
+            element = VisualTreeHelper.GetParent(element);
+        }
+
+        return null;
     }
 
     private void ToggleShortcutCheatSheet()
@@ -2316,27 +2600,68 @@ public partial class MainWindow : FluentWindow
                 new("退出", "Alt+X")
             ]),
         new(
+            "追踪",
+            SymbolRegular.ArrowTrending24,
+            [
+                new("开始追踪…", "Ctrl+Alt+F7")
+            ]),
+        new(
+            "视图",
+            SymbolRegular.Eye24,
+            [
+                new("日志", "Alt+L"),
+                new("断点列表", "Alt+B"),
+                new("内存布局", "Alt+M"),
+                new("调用堆栈", "Alt+K"),
+                new("笔记", "Alt+N"),
+                new("Lua 脚本", "Alt+S"),
+                new("模块", "Alt+E"),
+                new("线程列表", "Alt+T"),
+                new("字符串引用", "Alt+R"),
+                new("注释", "Ctrl+Alt+C"),
+                new("自定义符号", "Ctrl+Alt+L"),
+                new("AI 助手", "Ctrl+Shift+A")
+            ]),
+        new(
             "面板",
             SymbolRegular.PanelRight24,
             [
                 new("下一个面板", "Ctrl+Tab"),
                 new("上一个面板", "Ctrl+Shift+Tab"),
-                new("关闭当前面板", "Ctrl+W"),
+                new("关闭当前面板", "Ctrl+W")
+            ]),
+        new(
+            "工具与设置",
+            SymbolRegular.Wrench24,
+            [
                 new("快捷键速查", "Ctrl+Shift+/")
             ]),
         new(
-            "内存搜索",
-            SymbolRegular.Search24,
+            "反汇编",
+            SymbolRegular.Code24,
             [
-                new("首次搜索", "Ctrl+Shift+S"),
-                new("再次搜索", "Ctrl+Shift+N")
+                new("跳转到地址", "Ctrl+G"),
+                new("跟随跳转 / Call", "Enter"),
+                new("修改汇编指令", "Space"),
+                new("返回上一位置", "-")
             ]),
         new(
-            "Lua 脚本",
-            SymbolRegular.Script24,
+            "反汇编·书签",
+            SymbolRegular.Bookmark24,
             [
-                new("运行脚本", "Ctrl+Shift+F11"),
-                new("停止脚本", "Ctrl+Shift+F12")
+                new("设置书签 0", "Ctrl+Alt+0"),
+                new("设置书签 1", "Ctrl+Alt+1"),
+                new("设置书签 2", "Ctrl+Alt+2"),
+                new("设置书签 3", "Ctrl+Alt+3")
+            ]),
+        new(
+            "数据视图",
+            SymbolRegular.Table24,
+            [
+                new("跳转到地址", "Ctrl+G"),
+                new("复制", "Ctrl+C"),
+                new("粘贴", "Ctrl+V"),
+                new("跟随指针", "Space")
             ])
     ];
 

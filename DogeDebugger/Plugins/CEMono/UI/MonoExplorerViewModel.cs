@@ -138,6 +138,26 @@ public partial class MonoExplorerViewModel : ObservableObject, IDisposable
         _ = DetectRuntimeForProcessAsync(ProcessId);
     }
 
+    public void NavigateToInstanceAddress(
+        ulong address,
+        string? registerName)
+    {
+        if (address == 0)
+        {
+            return;
+        }
+
+        InstanceAddress = $"0x{address:X}";
+        if (IsConnected)
+        {
+            ApplyInstanceAddress(address);
+        }
+
+        StatusText = string.IsNullOrWhiteSpace(registerName)
+            ? $"已定位到 Mono 实例 0x{address:X}。"
+            : $"已定位到 {registerName} 指向的 Mono 实例 0x{address:X}。";
+    }
+
     public void Dispose()
     {
         if (_disposed)

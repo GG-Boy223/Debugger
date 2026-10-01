@@ -33,6 +33,7 @@
                    Text="目标地址 (16进制):" />
         <TextBox x:Name="TargetAddressBox"
                  Grid.Row="1"
+                 Height="33"
                  Margin="0,0,0,10"
                  FontFamily="Consolas" />
 
@@ -48,6 +49,8 @@
                            Foreground="#E4000000"
                            Text="最大深度:" />
                 <TextBox x:Name="MaxDepthBox"
+                         Height="35"
+                         Margin="0"
                          Text="5" />
             </StackPanel>
             <StackPanel Grid.Column="2">
@@ -55,6 +58,8 @@
                            Foreground="#E4000000"
                            Text="最大偏移 (16进制):" />
                 <TextBox x:Name="MaxOffsetBox"
+                         Height="33"
+                         Margin="0"
                          FontFamily="Consolas"
                          Text="1000" />
             </StackPanel>
@@ -72,6 +77,8 @@
                            Foreground="#E4000000"
                            Text="指针对齐:" />
                 <ComboBox x:Name="AlignmentCombo"
+                          Height="35"
+                          Margin="0"
                           SelectedIndex="1">
                     <ComboBoxItem Tag="1">1 (不对齐)</ComboBoxItem>
                     <ComboBoxItem Tag="4">4 (四字节对齐)</ComboBoxItem>
@@ -83,6 +90,8 @@
                            Foreground="#E4000000"
                            Text="最大结果数:" />
                 <TextBox x:Name="MaxResultsBox"
+                         Height="34"
+                         Margin="0"
                          Text="10000000" />
             </StackPanel>
         </Grid>
@@ -97,6 +106,7 @@
                       Content="每节点最大偏移变体数:" />
             <TextBox x:Name="MaxOffsetsPerNodeBox"
                      Width="60"
+                     Height="35"
                      Margin="8,0,0,0"
                      IsEnabled="True"
                      Text="3" />
@@ -178,11 +188,13 @@
                     HorizontalAlignment="Right"
                     Orientation="Horizontal">
             <Button Width="80"
+                    Height="31"
                     Margin="0,0,8,0"
                     IsDefault="True"
                     Click="OnConfirmClick"
                     Content="确定" />
             <Button Width="80"
+                    Height="31"
                     IsCancel="True"
                     Click="OnCancelClick"
                     Content="取消" />

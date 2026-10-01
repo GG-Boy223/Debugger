@@ -1,44 +1,250 @@
 <UserControl x:Class="DogeDebugger.UI.Views.Panels.MemorySearchView"
+             x:Name="MemorySearchRoot"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:DogeDebugger"
+             xmlns:dialogs="clr-namespace:DogeDebugger.UI.Views.Dialogs"
+             xmlns:panels="clr-namespace:DogeDebugger.UI.ViewModels.Panels"
              xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
-             FontFamily="Cascadia Code, Consolas, monospace"
-             FontSize="12">
+             FontSize="11">
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
+        <Color x:Key="SystemAccentColor">#FF2481B3</Color>
+        <Color x:Key="SystemAccentColorPrimary">#FF2481B3</Color>
+        <Color x:Key="SystemAccentColorSecondary">#FF2481B3</Color>
+        <Color x:Key="SystemAccentColorTertiary">#FF2481B3</Color>
+        <SolidColorBrush x:Key="SystemAccentColorBrush" Color="#FF2481B3" />
+        <SolidColorBrush x:Key="SystemAccentColorPrimaryBrush" Color="#FF2481B3" />
+        <SolidColorBrush x:Key="SystemAccentColorSecondaryBrush" Color="#FF2481B3" />
+        <SolidColorBrush x:Key="SystemAccentColorTertiaryBrush" Color="#FF2481B3" />
+        <Style x:Key="MemoryPrimaryButtonStyle"
+               TargetType="{x:Type ui:Button}"
+               BasedOn="{StaticResource {x:Type ui:Button}}">
+            <Setter Property="Background" Value="#FF2481B3" />
+            <Setter Property="BorderBrush" Value="#FF2481B3" />
+            <Setter Property="Foreground" Value="White" />
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#FF1E709C" />
+                    <Setter Property="BorderBrush" Value="#FF1E709C" />
+                </Trigger>
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter Property="Background" Value="#FF185C80" />
+                    <Setter Property="BorderBrush" Value="#FF185C80" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        <Style TargetType="{x:Type CheckBox}">
+            <Setter Property="MinHeight" Value="32" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type CheckBox}">
+                        <Grid Background="Transparent">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="34" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Border x:Name="CheckBoxBorder"
+                                    Width="14"
+                                    Height="14"
+                                    Margin="7,0,0,0"
+                                    HorizontalAlignment="Left"
+                                    VerticalAlignment="Center"
+                                    Background="Transparent"
+                                    BorderBrush="#8A8A8A"
+                                    BorderThickness="1"
+                                    CornerRadius="2">
+                                <Grid>
+                                    <Path x:Name="CheckGlyph"
+                                          Data="M 2,7 L 5,10 L 12,2"
+                                          Stroke="White"
+                                          StrokeEndLineCap="Round"
+                                          StrokeStartLineCap="Round"
+                                          StrokeThickness="2"
+                                          Visibility="Collapsed" />
+                                    <Rectangle x:Name="IndeterminateGlyph"
+                                               Width="8"
+                                               Height="2"
+                                               Fill="White"
+                                               Visibility="Collapsed" />
+                                </Grid>
+                            </Border>
+                            <ContentPresenter Grid.Column="1"
+                                              Margin="5,0,0,0"
+                                              VerticalAlignment="Center"
+                                              RecognizesAccessKey="False" />
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="CheckBoxBorder" Property="Background" Value="#FF2481B3" />
+                                <Setter TargetName="CheckBoxBorder" Property="BorderBrush" Value="#FF2481B3" />
+                                <Setter TargetName="CheckGlyph" Property="Visibility" Value="Visible" />
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="{x:Null}">
+                                <Setter TargetName="CheckBoxBorder" Property="Background" Value="#FF2481B3" />
+                                <Setter TargetName="CheckBoxBorder" Property="BorderBrush" Value="#FF2481B3" />
+                                <Setter TargetName="IndeterminateGlyph" Property="Visibility" Value="Visible" />
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="CheckBoxBorder" Property="BorderBrush" Value="#FF2481B3" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.45" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style TargetType="{x:Type RadioButton}">
+            <Setter Property="MinHeight" Value="32" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type RadioButton}">
+                        <Grid Background="Transparent">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="24" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Border x:Name="RadioBorder"
+                                    Width="14"
+                                    Height="14"
+                                    Margin="5,0,0,0"
+                                    HorizontalAlignment="Left"
+                                    VerticalAlignment="Center"
+                                    Background="Transparent"
+                                    BorderBrush="#8A8A8A"
+                                    BorderThickness="1"
+                                    CornerRadius="7">
+                                <Ellipse x:Name="RadioDot"
+                                         Width="6"
+                                         Height="6"
+                                         Fill="#FF2481B3"
+                                         Visibility="Collapsed" />
+                            </Border>
+                            <ContentPresenter Grid.Column="1"
+                                              Margin="4,0,0,0"
+                                              VerticalAlignment="Center"
+                                              RecognizesAccessKey="False" />
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="RadioBorder" Property="BorderBrush" Value="#FF2481B3" />
+                                <Setter TargetName="RadioDot" Property="Visibility" Value="Visible" />
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="RadioBorder" Property="BorderBrush" Value="#FF2481B3" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.45" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <DataTemplate DataType="{x:Type panels:SavedAddressRow}">
+            <Grid Height="24">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="44" />
+                    <ColumnDefinition Width="220" />
+                    <ColumnDefinition Width="170" />
+                    <ColumnDefinition Width="110" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <CheckBox Grid.Column="0"
+                          Margin="8,0,0,0"
+                          HorizontalAlignment="Left"
+                          VerticalAlignment="Center"
+                          IsChecked="{Binding IsFrozen}" />
+                <TextBlock Grid.Column="1"
+                           Margin="5,0,0,0"
+                           VerticalAlignment="Center"
+                           Text="{Binding Description}"
+                           TextTrimming="CharacterEllipsis" />
+                <TextBlock Grid.Column="2"
+                           Margin="5,0,0,0"
+                           VerticalAlignment="Center"
+                           FontFamily="Cascadia Code, Consolas, monospace"
+                           Text="{Binding AddressText}"
+                           TextTrimming="CharacterEllipsis" />
+                <TextBlock Grid.Column="3"
+                           Margin="5,0,0,0"
+                           VerticalAlignment="Center"
+                           Text="{Binding TypeText}"
+                           TextTrimming="CharacterEllipsis" />
+                <TextBlock Grid.Column="4"
+                           Margin="5,0,0,0"
+                           VerticalAlignment="Center"
+                           FontFamily="Cascadia Code, Consolas, monospace"
+                           Text="{Binding Value}"
+                           TextTrimming="CharacterEllipsis" />
+            </Grid>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type dialogs:PointerScanAddressEntry}">
+            <Grid Height="24">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="44" />
+                    <ColumnDefinition Width="220" />
+                    <ColumnDefinition Width="170" />
+                    <ColumnDefinition Width="110" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="1"
+                           Margin="5,0,0,0"
+                           VerticalAlignment="Center"
+                           Text="{Binding Description}"
+                           TextTrimming="CharacterEllipsis" />
+                <TextBlock Grid.Column="2"
+                           Margin="5,0,0,0"
+                           VerticalAlignment="Center"
+                           FontFamily="Cascadia Code, Consolas, monospace"
+                           Text="{Binding Address}"
+                           TextTrimming="CharacterEllipsis" />
+                <TextBlock Grid.Column="3"
+                           Margin="5,0,0,0"
+                           VerticalAlignment="Center"
+                           Text="{Binding Type}"
+                           TextTrimming="CharacterEllipsis" />
+                <TextBlock Grid.Column="4"
+                           Margin="5,0,0,0"
+                           VerticalAlignment="Center"
+                           FontFamily="Cascadia Code, Consolas, monospace"
+                           Text="{Binding Value}"
+                           TextTrimming="CharacterEllipsis" />
+            </Grid>
+        </DataTemplate>
     </UserControl.Resources>
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
+            <RowDefinition Height="4" />
             <RowDefinition Height="360" />
         </Grid.RowDefinitions>
 
         <Border Grid.Row="0"
+                Padding="8,3"
                 BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
-                BorderThickness="0,0,0,1"
-                Padding="6,3">
+                BorderThickness="0,0,0,1">
             <DockPanel>
-                <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
-                    <TextBlock FontSize="11"
-                               Foreground="{DynamicResource TextFillColorSecondaryBrush}">
-                        <Run Text="结果数: " />
-                        <Run Text="{Binding ResultCount, Mode=OneWay}"
-                             FontWeight="SemiBold"
-                             Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
-                    </TextBlock>
-                    <TextBlock Margin="12,0,0,0"
-                               FontSize="11"
-                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                               Text="(结果超过 100000 条，仅显示前 100000 条)"
-                               Visibility="Collapsed" />
-                </StackPanel>
+                <TextBlock DockPanel.Dock="Left"
+                           FontSize="12"
+                           VerticalAlignment="Center">
+                    <Run Text="结果数: " />
+                    <Run Text="{Binding ResultCount, Mode=OneWay}"
+                         FontWeight="SemiBold" />
+                </TextBlock>
                 <TextBlock DockPanel.Dock="Right"
                            HorizontalAlignment="Right"
                            VerticalAlignment="Center"
-                           FontSize="11"
+                           FontSize="12"
                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                            Text="双击结果可添加到地址列表" />
             </DockPanel>
@@ -47,7 +253,7 @@
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="5" />
+                <ColumnDefinition Width="4" />
                 <ColumnDefinition Width="390" />
             </Grid.ColumnDefinitions>
 
@@ -58,6 +264,8 @@
                       AutoGenerateColumns="False"
                       IsReadOnly="True"
                       HeadersVisibility="Column"
+                      ColumnHeaderHeight="32"
+                      RowHeight="29"
                       GridLinesVisibility="Horizontal"
                       CanUserAddRows="False"
                       CanUserDeleteRows="False"
@@ -66,10 +274,22 @@
                       VirtualizingPanel.VirtualizationMode="Recycling"
                       BorderThickness="0"
                       Background="Transparent"
+                      FontSize="12"
                       MouseDoubleClick="OnResultsMouseDoubleClick">
+                <DataGrid.RowStyle>
+                    <Style TargetType="DataGridRow">
+                        <Setter Property="Background" Value="Transparent" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsValueChanged}" Value="True">
+                                <Setter Property="Foreground"
+                                        Value="{DynamicResource SystemFillColorSuccessBrush}" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </DataGrid.RowStyle>
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="地址"
-                                        Binding="{Binding AddressText}"
+                                        Binding="{Binding DisplayAddress}"
                                         Width="320" />
                     <DataGridTextColumn Header="当前值"
                                         Binding="{Binding DisplayValue}"
@@ -77,119 +297,204 @@
                     <DataGridTextColumn Header="先前值"
                                         Binding="{Binding PreviousValueText}"
                                         Width="140" />
-                    <DataGridTextColumn Header="描述"
-                                        Binding="{Binding Description}"
-                                        Width="240" />
+                    <DataGridTextColumn Width="*" />
                 </DataGrid.Columns>
+                <DataGrid.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="添加到地址列表"
+                                  Click="OnAddSelectedToAddressListClick" />
+                        <MenuItem Header="在反汇编中显示"
+                                  Click="OnOpenSelectedResultClick" />
+                        <MenuItem Header="在数据视图中显示"
+                                  Click="OnOpenSelectedResultClick" />
+                        <Separator />
+                        <MenuItem Header="复制地址"
+                                  Click="OnCopySelectedAddressClick" />
+                    </ContextMenu>
+                </DataGrid.ContextMenu>
             </DataGrid>
 
             <GridSplitter Grid.Column="1"
-                          Width="5"
+                          Width="4"
                           HorizontalAlignment="Stretch"
                           Background="{DynamicResource ControlStrokeColorDefaultBrush}" />
 
             <ScrollViewer Grid.Column="2"
                           VerticalScrollBarVisibility="Auto"
                           HorizontalScrollBarVisibility="Disabled">
-                <StackPanel Margin="6,0,0,0">
+                <StackPanel Width="366"
+                            Margin="8,4,16,0">
                     <StackPanel Orientation="Horizontal">
-                        <ui:Button Content="首次搜索"
-                                   Command="{Binding FirstScanCommand}"
-                                   Margin="0,0,3,0"
-                                   Padding="8,2" />
-                        <ui:Button Content="再次搜索"
-                                   Command="{Binding NextScanCommand}"
-                                   Margin="3,0"
-                                   Padding="8,2" />
-                        <ui:Button Content="撤销搜索"
-                                   Command="{Binding ResetCommand}"
-                                   Margin="3,0"
-                                   Padding="8,2" />
-                        <ui:Button Content="停止搜索"
-                                   Command="{Binding CancelScanCommand}"
-                                   Margin="3,0,0,0"
-                                   Padding="8,2" />
+                        <ui:Button Width="89"
+                                   Height="30"
+                                   Padding="0"
+                                   FontSize="11"
+                                   Style="{StaticResource MemoryPrimaryButtonStyle}"
+                                   Content="首次搜索"
+                                   Command="{Binding FirstScanCommand}" />
+                        <ui:Button Width="86"
+                                   Height="30"
+                                   Margin="6,0,0,0"
+                                   Padding="0"
+                                   FontSize="11"
+                                   Content="再次搜索"
+                                   Command="{Binding NextScanCommand}" />
+                        <ui:Button Width="89"
+                                   Height="30"
+                                   Margin="5,0,0,0"
+                                   Padding="0"
+                                   FontSize="11"
+                                   Content="撤销搜索"
+                                   Command="{Binding UndoScanCommand}" />
+                        <ui:Button Width="89"
+                                   Height="30"
+                                   Margin="2,0,0,0"
+                                   Padding="0"
+                                   FontSize="11"
+                                   Content="停止搜索"
+                                   Command="{Binding CancelScanCommand}" />
                     </StackPanel>
 
                     <Grid Margin="0,6,0,0">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="20" />
+                            <ColumnDefinition Width="126" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
                         <TextBlock Grid.Column="0"
-                                   Text="值:"
-                                   Margin="0,0,6,0"
-                                   VerticalAlignment="Center" />
+                                   VerticalAlignment="Center"
+                                   Text="值:" />
                         <CheckBox Grid.Column="1"
+                                  Width="120"
+                                  HorizontalAlignment="Left"
+                                  VerticalAlignment="Center"
                                   Content="16进制"
-                                  IsChecked="{Binding IsHexValue}"
-                                  Margin="0,0,6,0"
-                                  VerticalAlignment="Center" />
-                        <TextBox Grid.Column="2"
-                                 x:Name="SearchValueInput"
-                                 Text="{Binding SearchValue, UpdateSourceTrigger=PropertyChanged}"
+                                  IsChecked="{Binding IsHexValue}" />
+                        <Grid Grid.Column="2">
+                            <TextBox x:Name="SearchValueInput"
+                                     Width="220"
+                                     Padding="6,2"
+                                     Text="{Binding SearchValue, UpdateSourceTrigger=PropertyChanged}"
+                                     ToolTip="{Binding SearchValueHint}">
+                                <TextBox.Style>
+                                    <Style TargetType="TextBox">
+                                        <Setter Property="Height" Value="26" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsByteArrayType}" Value="True">
+                                                <Setter Property="Height" Value="32" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBox.Style>
+                            </TextBox>
+                            <TextBlock Margin="8,0,0,0"
+                                       Width="164"
+                                       HorizontalAlignment="Left"
+                                       VerticalAlignment="Center"
+                                       IsHitTestVisible="False"
+                                       FontFamily="Cascadia Code, Consolas, monospace"
+                                       FontSize="10"
+                                       Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                       Text="例如  48 8B 05 ?? ?? ?? ??"
+                                       Visibility="{Binding ByteArrayPlaceholderVisibility}" />
+                        </Grid>
+                    </Grid>
+
+                    <TextBlock Margin="0,4,0,0"
+                               FontSize="10"
+                               MinHeight="70"
+                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                               Text="{Binding ByteArrayHint}"
+                               TextWrapping="Wrap"
+                               Visibility="{Binding IsByteArrayType, Converter={StaticResource BoolToVis}}" />
+
+                    <CheckBox Margin="0,3,0,0"
+                              AutomationProperties.Name="包含映射内存 (MEM_MAPPED)"
+                              Width="248"
+                              HorizontalAlignment="Left"
+                              Content="包含映射内存 (MEM_MAPPED)"
+                              IsChecked="{Binding IncludeMappedMemory}"
+                              Visibility="{Binding IsMappedMemoryOptionVisible, Converter={StaticResource BoolToVis}}" />
+
+                    <Grid Margin="0,4,0,0"
+                          Visibility="{Binding IsSecondValueEnabled, Converter={StaticResource BoolToVis}}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="20" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0"
+                                   VerticalAlignment="Center"
+                                   Text="至:" />
+                        <TextBox Grid.Column="1"
+                                 x:Name="SearchValueSecondaryInput"
+                                 Width="346"
                                  Height="26"
                                  Padding="6,2"
-                                 ToolTip="{Binding SearchValueHint}" />
+                                 Text="{Binding SearchValueSecondary, UpdateSourceTrigger=PropertyChanged}" />
+                    </Grid>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="50" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0"
+                                   VerticalAlignment="Center"
+                                   Text="搜索类型" />
+                        <ComboBox Grid.Column="1"
+                                  x:Name="ScanTypeCombo"
+                                  Width="316"
+                                  Height="28"
+                                  HorizontalAlignment="Left"
+                                  ItemsSource="{Binding ScanTypes}"
+                                  SelectedItem="{Binding SelectedScanType}"
+                                  DisplayMemberPath="DisplayName" />
                     </Grid>
 
                     <Grid Margin="0,6,0,0">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="50" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
                         <TextBlock Grid.Column="0"
-                                   Text="搜索类型"
-                                   Margin="0,0,6,0"
-                                   VerticalAlignment="Center" />
+                                   VerticalAlignment="Center"
+                                   Text="值类型" />
                         <ComboBox Grid.Column="1"
-                                  x:Name="ScanTypeCombo"
-                                  ItemsSource="{Binding ScanTypes}"
-                                  SelectedItem="{Binding SelectedScanType}"
-                                  DisplayMemberPath="DisplayName"
+                                  x:Name="ValueTypeCombo"
+                                  Width="316"
                                   Height="28"
-                                  Margin="0,0,8,0" />
-                        <TextBlock Grid.Column="2"
-                                   Text="值类型"
-                                   Margin="0,0,6,0"
-                                   VerticalAlignment="Center" />
-                        <ComboBox Grid.Column="3"
+                                  HorizontalAlignment="Left"
                                   ItemsSource="{Binding ValueTypes}"
                                   SelectedItem="{Binding SelectedValueType}"
-                                  DisplayMemberPath="DisplayName"
-                                  Height="28" />
+                                  DisplayMemberPath="DisplayName" />
                     </Grid>
 
-                    <Grid Margin="0,6,0,0"
-                          Visibility="{Binding IsStringType, Converter={StaticResource BoolToVis}}">
+                    <Grid Margin="0,6,0,0">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="50" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
                         <TextBlock Grid.Column="0"
-                                   Margin="0,0,6,0"
                                    VerticalAlignment="Center"
                                    Text="编码" />
                         <ComboBox Grid.Column="1"
                                   x:Name="StringEncodingCombo"
+                                  Width="316"
+                                  Height="28"
+                                  HorizontalAlignment="Left"
                                   ItemsSource="{Binding StringEncodingOptions}"
                                   SelectedItem="{Binding SelectedStringEncoding}"
-                                  DisplayMemberPath="DisplayName"
-                                  Height="28" />
+                                  DisplayMemberPath="DisplayName" />
                     </Grid>
 
                     <Grid Margin="0,6,0,0"
                           Visibility="{Binding IsCustomCodePage, Converter={StaticResource BoolToVis}}">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="50" />
                             <ColumnDefinition Width="90" />
-                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
                         <TextBlock Grid.Column="0"
-                                   Margin="0,0,6,0"
                                    VerticalAlignment="Center"
                                    Text="代码页" />
                         <TextBox Grid.Column="1"
@@ -204,151 +509,137 @@
                                    Visibility="{Binding IsCustomCodePageInvalid, Converter={StaticResource BoolToVis}}" />
                     </Grid>
 
-                    <Grid Margin="0,6,0,0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0"
-                                   Text="起始"
-                                   Margin="0,0,6,0"
-                                   VerticalAlignment="Center" />
-                        <TextBox Grid.Column="1"
-                                 Text="{Binding StartAddress, UpdateSourceTrigger=PropertyChanged}"
-                                 Height="26"
-                                 Padding="6,2"
-                                 Margin="0,0,8,0" />
-                        <TextBlock Grid.Column="2"
-                                   Text="结束"
-                                   Margin="0,0,6,0"
-                                   VerticalAlignment="Center" />
-                        <TextBox Grid.Column="3"
-                                 Text="{Binding EndAddress, UpdateSourceTrigger=PropertyChanged}"
-                                 Height="26"
-                                 Padding="6,2" />
-                    </Grid>
-
-                    <TextBlock Margin="0,8,0,0"
+                    <TextBlock Margin="0,3,0,0"
                                FontSize="11"
-                               FontWeight="SemiBold"
                                Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                               Text="内存搜索选项" />
+                               Text="含地址列表的字符串类型" />
 
-                    <WrapPanel Margin="0,6,0,0">
-                        <CheckBox Content="私有内存"
-                                  IsChecked="{Binding SearchPrivateMemory}"
-                                  Margin="0,0,10,0" />
-                        <CheckBox Content="镜像内存"
-                                  IsChecked="{Binding SearchImageMemory}"
-                                  Margin="0,0,10,0" />
-                        <CheckBox Content="映射内存"
-                                  IsChecked="{Binding SearchMappedMemory}"
-                                  Margin="0,0,10,0" />
-                    </WrapPanel>
-
-                    <WrapPanel Margin="0,6,0,0">
-                        <CheckBox Content="可写"
-                                  IsChecked="{Binding WritableOnly}"
-                                  Margin="0,0,10,0" />
-                        <CheckBox Content="可执行"
-                                  IsChecked="{Binding ExecutableOnly}"
-                                  Margin="0,0,10,0" />
-                        <CheckBox Content="写拷贝"
-                                  IsEnabled="False"
-                                  Margin="0,0,10,0" />
-                        <CheckBox Content="快速搜索"
-                                  IsChecked="{Binding FastScanEnabled}"
-                                  Margin="0,0,6,0" />
-                        <TextBox x:Name="FastScanAlignmentInput"
-                                 Width="42"
-                                 Height="26"
-                                 Text="{Binding FastScanAlignment, UpdateSourceTrigger=PropertyChanged}"
-                                 Padding="6,2"
-                                 Margin="0,0,6,0" />
-                        <RadioButton Content="对齐"
-                                     IsChecked="True"
-                                     IsEnabled="False"
-                                     Margin="0,0,0,0" />
-                    </WrapPanel>
-
-                        <CheckBox Content="搜索时暂停目标进程"
-                                  IsEnabled="False"
-                                  Margin="0,6,0,0" />
-                    <CheckBox Content="含地址列表的字符串类型"
-                              IsChecked="{Binding IncludeAddressListStrings}"
-                              Margin="0,6,0,0" />
-                    <CheckBox Content="忽略字符串大小写"
+                    <CheckBox Margin="0,3,0,0"
+                              Width="120"
+                              HorizontalAlignment="Left"
+                              Content="不区分大小写"
                               IsChecked="{Binding IgnoreCase}"
-                              Margin="0,6,0,0" />
-                    <WrapPanel Margin="0,6,0,0">
-                        <TextBlock Margin="0,0,6,0"
-                                   VerticalAlignment="Center"
-                                   Text="结束位" />
-                        <TextBox Width="52"
-                                 Height="26"
-                                 Padding="6,2"
-                                 Text="{Binding BitStart, UpdateSourceTrigger=PropertyChanged}" />
-                        <TextBlock Margin="8,0,6,0"
-                                   VerticalAlignment="Center"
-                                   Text="长度" />
-                        <TextBox Width="52"
-                                 Height="26"
-                                 Padding="6,2"
-                                 Text="{Binding BitLength, UpdateSourceTrigger=PropertyChanged}" />
-                        <CheckBox Content="以 0 结尾"
-                                  IsChecked="{Binding ZeroTerminate}"
-                                  Margin="10,0,0,0"
-                                  VerticalAlignment="Center" />
-                    </WrapPanel>
-                    <TextBlock Margin="0,6,0,0"
-                               FontSize="11"
-                               Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                               Text="{Binding SearchValueHint}"
-                               TextWrapping="Wrap"
-                               Visibility="{Binding IsByteArrayType, Converter={StaticResource BoolToVis}}" />
-                    <TextBlock Text="浮点舍入模式"
-                               Margin="0,6,0,2"
-                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                               Visibility="Collapsed" />
-                    <StackPanel Orientation="Horizontal"
-                                Visibility="Collapsed">
-                        <RadioButton Content="标准舍入"
-                                     IsChecked="True"
-                                     IsEnabled="False"
-                                     Margin="0,0,8,0" />
-                        <RadioButton Content="极端舍入"
-                                     IsEnabled="False"
-                                     Margin="0,0,8,0" />
-                        <RadioButton Content="截断比较"
-                                     IsEnabled="False" />
-                    </StackPanel>
+                              Visibility="{Binding IsStringType, Converter={StaticResource BoolToVis}}" />
 
-                    <WrapPanel Margin="0,6,0,0">
-                        <ui:Button Content="导入"
-                                   IsEnabled="False"
-                                   Margin="0,0,6,0"
-                                   Padding="10,3" />
-                        <ui:Button Content="导出"
-                                   IsEnabled="False"
-                                   Margin="0,0,6,0"
-                                   Padding="10,3" />
-                        <ui:Button Content="热键: 启用"
-                                   IsEnabled="False"
-                                   Margin="0,0,6,0"
-                                   Padding="10,3" />
-                        <ui:Button Content="手动添加地址"
-                                   IsEnabled="False"
-                                   HorizontalAlignment="Right"
-                                   Padding="10,3" />
-                    </WrapPanel>
+                    <GroupBox Width="366"
+                              Padding="6,4,6,1"
+                              Header="内存搜索选项">
+                        <GroupBox.Style>
+                            <Style TargetType="GroupBox">
+                                <Setter Property="Margin" Value="0,7,0,0" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsStringType}" Value="True">
+                                        <Setter Property="Margin" Value="0,10,0,0" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </GroupBox.Style>
+                        <StackPanel>
+                            <ComboBox Width="342"
+                                      Height="28"
+                                      HorizontalAlignment="Left"
+                                      Margin="0,0,0,4"
+                                      ItemsSource="{Binding ModuleList}"
+                                      SelectedItem="{Binding SelectedModule}" />
+
+                            <Grid Margin="0,0,0,4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="42" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0"
+                                           VerticalAlignment="Center"
+                                           Text="起始" />
+                                <TextBox Grid.Column="1"
+                                         Width="300"
+                                         Height="26"
+                                         Padding="6,2"
+                                         Text="{Binding StartAddress, UpdateSourceTrigger=PropertyChanged}" />
+                            </Grid>
+
+                            <Grid Margin="0,0,0,4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="42" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0"
+                                           VerticalAlignment="Center"
+                                           Text="结束" />
+                                <TextBox Grid.Column="1"
+                                         Width="300"
+                                         Height="26"
+                                         Padding="6,2"
+                                         Text="{Binding EndAddress, UpdateSourceTrigger=PropertyChanged}" />
+                            </Grid>
+
+                            <Grid Margin="0,2,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="130" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <CheckBox Grid.Column="0"
+                                          Width="120"
+                                          HorizontalAlignment="Left"
+                                          Content="可写"
+                                          IsThreeState="True"
+                                          IsChecked="{Binding IsWritable}" />
+                                <CheckBox Grid.Column="1"
+                                          Width="120"
+                                          HorizontalAlignment="Left"
+                                          Content="可执行"
+                                          IsThreeState="True"
+                                          IsChecked="{Binding IsExecutable}" />
+                            </Grid>
+
+                            <CheckBox Margin="0,2,0,0"
+                                      Width="120"
+                                      HorizontalAlignment="Left"
+                                      Content="写拷贝"
+                                      IsThreeState="True"
+                                      IsChecked="{Binding IsCopyOnWrite}" />
+
+                            <Grid Margin="0,6,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="126" />
+                                    <ColumnDefinition Width="46" />
+                                    <ColumnDefinition Width="60" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <CheckBox Grid.Column="0"
+                                          Width="120"
+                                          HorizontalAlignment="Left"
+                                          VerticalAlignment="Center"
+                                          Content="快速搜索"
+                                          IsChecked="{Binding IsFastScanEnabled}" />
+                                <TextBox Grid.Column="1"
+                                         x:Name="FastScanAlignmentInput"
+                                         Width="42"
+                                         Height="26"
+                                         Padding="6,2"
+                                         Text="{Binding FastScanAlignmentValue, UpdateSourceTrigger=PropertyChanged}" />
+                                <RadioButton Grid.Column="2"
+                                             VerticalAlignment="Center"
+                                             Content="对齐"
+                                             IsChecked="{Binding IsFastScanAligned}" />
+                                <RadioButton Grid.Column="3"
+                                             VerticalAlignment="Center"
+                                             Content="结束位"
+                                             IsChecked="{Binding IsFastScanEnding}" />
+                            </Grid>
+
+                            <CheckBox Margin="0,6,0,0"
+                                      Width="149"
+                                      HorizontalAlignment="Left"
+                                      Content="搜索时暂停目标进程"
+                                      IsChecked="{Binding PauseWhileScanning}" />
+                        </StackPanel>
+                    </GroupBox>
                 </StackPanel>
             </ScrollViewer>
         </Grid>
 
         <GridSplitter Grid.Row="2"
-                      Height="5"
+                      Height="4"
                       HorizontalAlignment="Stretch"
                       Background="{DynamicResource ControlStrokeColorDefaultBrush}" />
 
@@ -357,32 +648,106 @@
                 BorderThickness="0,1,0,0">
             <Grid>
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="30" />
+                    <RowDefinition Height="24" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
-                <Grid Grid.Row="0" Margin="0,3,0,3">
+
+                <Grid Grid.Row="0"
+                      Margin="12,3,6,0">
+                    <StackPanel Orientation="Horizontal">
+                        <ui:Button Width="44"
+                                   Height="22"
+                                   Padding="0"
+                                   FontSize="11"
+                                   Content="导入"
+                                   Command="{Binding ImportAddressListCommand}" />
+                        <ui:Button Width="44"
+                                   Height="22"
+                                   Margin="6,0,0,0"
+                                   Padding="0"
+                                   FontSize="11"
+                                   Content="导出"
+                                   Command="{Binding ExportAddressListCommand}" />
+                        <ui:Button x:Name="HotkeyToggleButton"
+                                   Width="72"
+                                   Height="22"
+                                   Margin="6,0,0,0"
+                                   Padding="0"
+                                   FontSize="11"
+                                   Content="热键: 启用"
+                                   IsEnabled="False" />
+                    </StackPanel>
+                    <ui:Button Width="88"
+                               Height="22"
+                               HorizontalAlignment="Right"
+                               Padding="0"
+                               FontSize="11"
+                               Content="手动添加地址"
+                               Click="OnAddAddressManuallyClick" />
+                </Grid>
+
+                <Grid Grid.Row="1"
+                      Margin="12,0,12,0">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="22" />
+                        <ColumnDefinition Width="44" />
                         <ColumnDefinition Width="220" />
                         <ColumnDefinition Width="170" />
                         <ColumnDefinition Width="110" />
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0" Text="锁定" />
-                    <TextBlock Grid.Column="1" Text="描述" />
-                    <TextBlock Grid.Column="2" Text="地址" />
-                    <TextBlock Grid.Column="3" Text="类型" />
-                    <TextBlock Grid.Column="4" Text="值" />
+                    <TextBlock Grid.Column="0"
+                               Margin="10,0,0,0"
+                               VerticalAlignment="Center"
+                               Text="锁定" />
+                    <TextBlock Grid.Column="1"
+                               Margin="5,0,0,0"
+                               VerticalAlignment="Center"
+                               Text="描述" />
+                    <TextBlock Grid.Column="2"
+                               Margin="5,0,0,0"
+                               VerticalAlignment="Center"
+                               Text="地址" />
+                    <TextBlock Grid.Column="3"
+                               Margin="5,0,0,0"
+                               VerticalAlignment="Center"
+                               Text="类型" />
+                    <TextBlock Grid.Column="4"
+                               Margin="5,0,0,0"
+                               VerticalAlignment="Center"
+                               Text="值" />
                 </Grid>
-                <ListBox Grid.Row="1"
+
+                <ListBox Grid.Row="2"
                          x:Name="SavedAddressTree"
                          ItemsSource="{Binding SavedAddresses}"
+                         SelectedItem="{Binding SelectedSavedAddress}"
                          BorderThickness="0"
-                         Background="Transparent" />
+                         Background="Transparent"
+                         FontSize="12"
+                         PreviewMouseRightButtonDown="OnSavedAddressPreviewMouseRightButtonDown">
+                    <ListBox.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem Header="在反汇编中显示"
+                                      Click="OnOpenSelectedSavedAddressClick" />
+                            <MenuItem Header="在数据视图中显示"
+                                      Click="OnOpenSelectedSavedAddressClick" />
+                            <MenuItem Header="冻结/解冻"
+                                      Click="OnToggleSelectedSavedAddressClick" />
+                            <MenuItem Header="复制地址"
+                                      Click="OnCopySelectedSavedAddressClick" />
+                            <Separator />
+                            <MenuItem Header="删除"
+                                      Click="OnDeleteSelectedSavedAddressClick" />
+                            <MenuItem Header="清除地址列表"
+                                      Click="OnClearSavedAddressesClick" />
+                        </ContextMenu>
+                    </ListBox.ContextMenu>
+                </ListBox>
             </Grid>
         </Border>
 
-        <Border Grid.RowSpan="3"
+        <Border Grid.RowSpan="4"
                 x:Name="ProcessOverlay"
                 Background="{DynamicResource ApplicationBackgroundBrush}"
                 Visibility="{Binding ProcessOverlayVisibility}">
@@ -401,6 +766,5 @@
                            HorizontalAlignment="Center" />
             </StackPanel>
         </Border>
-
     </Grid>
 </UserControl>

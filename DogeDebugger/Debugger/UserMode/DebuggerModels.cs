@@ -81,6 +81,17 @@ public sealed class BreakpointFilterRequestEventArgs : EventArgs
     public required ulong InstructionPointer { get; init; }
 }
 
+public sealed class InternalBreakpointHitEventArgs : EventArgs
+{
+    public required ulong Address { get; init; }
+
+    public required string OwnerId { get; init; }
+
+    public required uint ThreadId { get; init; }
+
+    public required RegisterSnapshot Registers { get; init; }
+}
+
 public sealed class DebuggerStateChangedEventArgs : EventArgs
 {
     public required bool IsDebugging { get; init; }

@@ -218,6 +218,26 @@ internal sealed class MemoryValueSample
 
     internal byte[] Bytes => _bytes.ToArray();
 
+    internal string ToDisplayString()
+    {
+        if (IsString(_kind))
+        {
+            return _encoding.GetString(_bytes);
+        }
+
+        return _kind switch
+        {
+            MemoryValueKind.Byte => _bytes[0].ToString(CultureInfo.InvariantCulture),
+            MemoryValueKind.Int16 => BitConverter.ToInt16(_bytes).ToString(CultureInfo.InvariantCulture),
+            MemoryValueKind.Int32 => BitConverter.ToInt32(_bytes).ToString(CultureInfo.InvariantCulture),
+            MemoryValueKind.Int64 => BitConverter.ToInt64(_bytes).ToString(CultureInfo.InvariantCulture),
+            MemoryValueKind.Single => BitConverter.ToSingle(_bytes).ToString("R", CultureInfo.InvariantCulture),
+            MemoryValueKind.Double => BitConverter.ToDouble(_bytes).ToString("R", CultureInfo.InvariantCulture),
+            MemoryValueKind.ByteArray => Convert.ToHexString(_bytes),
+            _ => Convert.ToHexString(_bytes)
+        };
+    }
+
     internal bool Matches(
         MemoryValueSample current,
         MemoryValueComparison comparison,

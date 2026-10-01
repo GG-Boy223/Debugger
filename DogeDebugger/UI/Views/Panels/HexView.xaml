@@ -7,97 +7,191 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <Grid Grid.Row="0">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
-            <StackPanel Grid.Column="0"
-                        Background="{DynamicResource SubtleFillColorSecondaryBrush}"
-                        Orientation="Horizontal">
-                <ui:Button Width="24"
-                           Height="30"
-                           Padding="0"
-                           Appearance="Transparent"
-                           ToolTip="上一个内存视图"
-                           Click="OnPreviousHexTab">
-                    <TextBlock Text="◀" />
-                </ui:Button>
-                <ui:Button Width="24"
-                           Height="30"
-                           Padding="0"
-                           Appearance="Transparent"
-                           ToolTip="下一个内存视图"
-                           Click="OnNextHexTab">
-                    <TextBlock Text="▶" />
-                </ui:Button>
-            </StackPanel>
-            <TabControl x:Name="HexTabs"
-                        Grid.Column="1"
-                        Height="31"
-                        BorderThickness="0"
-                        Background="{DynamicResource SubtleFillColorSecondaryBrush}">
-                <TabControl.ItemTemplate>
-                    <DataTemplate>
-                        <TextBlock Text="{Binding StringFormat=内存 {0}}" />
-                    </DataTemplate>
-                </TabControl.ItemTemplate>
-            </TabControl>
-        </Grid>
+        <TabControl x:Name="HexTabs"
+                    Grid.Row="0"
+                    Height="36"
+                    BorderThickness="0"
+                    Background="{DynamicResource SubtleFillColorSecondaryBrush}">
+            <TabControl.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock Text="{Binding StringFormat={}内存 {0}}" />
+                </DataTemplate>
+            </TabControl.ItemTemplate>
+        </TabControl>
 
         <Border Grid.Row="1"
+                Height="21"
+                BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                BorderThickness="0,0,0,1">
+            <StackPanel Orientation="Horizontal">
+                <Button Width="21"
+                        Height="18"
+                        Margin="1,0"
+                        Padding="0"
+                        Command="{Binding GoBackCommand}"
+                        Content="◀" />
+                <Button Width="21"
+                        Height="18"
+                        Margin="1,0"
+                        Padding="0"
+                        Command="{Binding GoForwardCommand}"
+                        Content="▶" />
+                <Rectangle Width="1"
+                           Height="14"
+                           Margin="4,2"
+                           Fill="{DynamicResource ControlStrokeColorDefaultBrush}" />
+                <Button Width="34"
+                        Height="18"
+                        Margin="1,0"
+                        Padding="2,0"
+                        Command="{Binding NavigateCommand}"
+                        Content="跳转" />
+            </StackPanel>
+        </Border>
+
+        <Border Grid.Row="2"
                 Padding="6,2"
                 BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
                 BorderThickness="0,0,0,1"
                 Background="{DynamicResource SubtleFillColorSecondaryBrush}">
-            <DockPanel>
-                <TextBlock DockPanel.Dock="Left"
-                           FontFamily="Cascadia Code, Consolas, monospace"
-                           FontSize="11"
-                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                           Text="{Binding TargetText}" />
-                <TextBlock DockPanel.Dock="Right"
-                           HorizontalAlignment="Right"
-                           FontFamily="Cascadia Code, Consolas, monospace"
-                           FontSize="11"
-                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                           Text="{Binding StatusText}" />
-                <Border />
-            </DockPanel>
+            <TextBlock x:Name="RegionInfoText"
+                       FontFamily="Cascadia Code, Consolas, monospace"
+                       FontSize="11"
+                       TextTrimming="CharacterEllipsis"
+                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                       Text="{Binding HexRegionInfoText}" />
         </Border>
 
-        <DataGrid Grid.Row="2"
+        <DataGrid x:Name="HexGrid"
+                  Grid.Row="3"
                   ItemsSource="{Binding HexLines}"
                   AutoGenerateColumns="False"
                   IsReadOnly="True"
                   CanUserAddRows="False"
                   CanUserDeleteRows="False"
-                  HeadersVisibility="Column"
+                  HeadersVisibility="None"
                   ColumnHeaderHeight="32"
                   GridLinesVisibility="None"
+                  RowHeight="26"
+                  AlternatingRowBackground="#FFF8FAFD"
                   EnableRowVirtualization="True"
                   VirtualizingPanel.IsVirtualizing="True"
                   VirtualizingPanel.VirtualizationMode="Recycling"
                   BorderThickness="0"
                   Background="Transparent"
                   FontFamily="Cascadia Code, Consolas, monospace"
-                  FontSize="12">
+                  FontSize="11"
+                  PreviewMouseRightButtonDown="OnHexGridPreviewMouseRightButtonDown">
+            <DataGrid.ContextMenu>
+                <ContextMenu x:Name="HexContextMenu"
+                             Opened="OnHexContextMenuOpened">
+                    <MenuItem Header="跳转到地址(G)"
+                              InputGestureText="Ctrl+G"
+                              Click="OnHexGoToAddressClick" />
+                    <Separator />
+                    <MenuItem Header="数据显示模式">
+                        <MenuItem x:Name="HexModeHexMenu"
+                                  Header="十六进制 (Hex)"
+                                  Tag="Hex"
+                                  IsCheckable="True"
+                                  Click="OnHexDisplayModeClick" />
+                        <Separator />
+                        <MenuItem x:Name="HexModeByteMenu"
+                                  Header="单字节"
+                                  Tag="Hex"
+                                  IsCheckable="True"
+                                  Click="OnHexDisplayModeClick" />
+                        <MenuItem x:Name="HexModeWordMenu"
+                                  Header="双字节"
+                                  Tag="Word"
+                                  IsCheckable="True"
+                                  Click="OnHexDisplayModeClick" />
+                        <MenuItem x:Name="HexModeDwordMenu"
+                                  Header="四字节"
+                                  Tag="Dword"
+                                  IsCheckable="True"
+                                  Click="OnHexDisplayModeClick" />
+                        <MenuItem x:Name="HexModeQwordMenu"
+                                  Header="八字节"
+                                  Tag="Qword"
+                                  IsCheckable="True"
+                                  Click="OnHexDisplayModeClick" />
+                        <Separator />
+                        <MenuItem x:Name="HexModeFloatMenu"
+                                  Header="浮点数 (Float)"
+                                  Tag="Float"
+                                  IsCheckable="True"
+                                  Click="OnHexDisplayModeClick" />
+                        <MenuItem x:Name="HexModeDoubleMenu"
+                                  Header="双浮点 (Double)"
+                                  Tag="Double"
+                                  IsCheckable="True"
+                                  Click="OnHexDisplayModeClick" />
+                    </MenuItem>
+                    <MenuItem Header="每行显示长度">
+                        <MenuItem Header="4 字节" Tag="4" Click="OnHexBytesPerRowClick" />
+                        <MenuItem Header="8 字节" Tag="8" Click="OnHexBytesPerRowClick" />
+                        <MenuItem Header="16 字节" Tag="16" Click="OnHexBytesPerRowClick" />
+                        <MenuItem Header="24 字节" Tag="24" Click="OnHexBytesPerRowClick" />
+                        <MenuItem Header="32 字节" Tag="32" Click="OnHexBytesPerRowClick" />
+                    </MenuItem>
+                    <MenuItem Header="文本编码">
+                        <MenuItem Header="ASCII" Tag="ASCII" Click="OnHexTextEncodingClick" />
+                        <MenuItem Header="UTF-8" Tag="UTF-8" Click="OnHexTextEncodingClick" />
+                        <MenuItem Header="UTF-16" Tag="UTF-16" Click="OnHexTextEncodingClick" />
+                        <MenuItem Header="GBK" Tag="GBK" Click="OnHexTextEncodingClick" />
+                        <MenuItem Header="BIG5" Tag="BIG5" Click="OnHexTextEncodingClick" />
+                    </MenuItem>
+                    <Separator />
+                    <MenuItem Header="硬件断点">
+                        <MenuItem Header="读取时中断"
+                                  Tag="HardwareReadWrite"
+                                  Click="OnHexHardwareBreakpointClick" />
+                        <MenuItem Header="写入时中断"
+                                  Tag="HardwareWrite"
+                                  Click="OnHexHardwareBreakpointClick" />
+                        <Separator />
+                        <MenuItem Header="查看读取记录"
+                                  Tag="Read"
+                                  Click="OnHexViewAccessRecordClick" />
+                        <MenuItem Header="查看写入记录"
+                                  Tag="Write"
+                                  Click="OnHexViewAccessRecordClick" />
+                    </MenuItem>
+                    <Separator />
+                    <MenuItem Header="修改内存属性"
+                              Click="OnHexChangeProtectionClick" />
+                    <Separator />
+                    <MenuItem Header="复制">
+                        <MenuItem Header="复制地址" Tag="Address" Click="OnHexCopyClick" />
+                        <MenuItem Header="复制 RVA" Tag="Rva" Click="OnHexCopyClick" />
+                        <MenuItem Header="复制整行" Tag="Line" Click="OnHexCopyClick" />
+                    </MenuItem>
+                </ContextMenu>
+            </DataGrid.ContextMenu>
+            <DataGrid.Resources>
+                <Style TargetType="DataGridCell">
+                    <Setter Property="Padding" Value="5,0" />
+                    <Setter Property="BorderThickness" Value="0" />
+                    <Setter Property="VerticalContentAlignment" Value="Center" />
+                </Style>
+            </DataGrid.Resources>
             <DataGrid.Columns>
                 <DataGridTextColumn Header=""
                                     Binding="{Binding AddressText}"
                                     Width="130" />
-                <DataGridTextColumn Header="00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F"
+                <DataGridTextColumn x:Name="HexBytesColumn"
+                                    Header="{Binding HexBytesHeader}"
                                     Binding="{Binding Hex}"
-                                    Width="500" />
+                                    Width="*" />
                 <DataGridTextColumn Header="ASCII"
                                     Binding="{Binding Ascii}"
-                                    Width="200" />
+                                    Width="*" />
             </DataGrid.Columns>
         </DataGrid>
-        <controls:PanelProcessOverlay Grid.Row="0"
-                                      Grid.RowSpan="3" />
     </Grid>
 </UserControl>

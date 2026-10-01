@@ -12,6 +12,8 @@ public sealed class MemoryValueScanOptions
 
     public string? SecondValue { get; set; }
 
+    public string? ModuleName { get; set; }
+
     public ulong StartAddress { get; set; }
 
     public ulong EndAddress { get; set; } = ulong.MaxValue;
@@ -29,6 +31,14 @@ public sealed class MemoryValueScanOptions
     public bool WritableOnly { get; set; }
 
     public bool ExecutableOnly { get; set; }
+
+    public bool? RequireWritable { get; set; }
+
+    public bool? RequireExecutable { get; set; }
+
+    public bool? RequireCopyOnWrite { get; set; }
+
+    public bool PauseWhileScanning { get; set; }
 
     public bool IgnoreCase { get; set; }
 

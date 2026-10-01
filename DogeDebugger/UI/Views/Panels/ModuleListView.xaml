@@ -4,236 +4,234 @@
              xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
              xmlns:controls="clr-namespace:DogeDebugger.UI.Controls">
     <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*" MinWidth="250" />
-            <ColumnDefinition Width="5" />
-            <ColumnDefinition Width="*" MinWidth="300" />
-        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="21" />
+        </Grid.RowDefinitions>
 
-        <Grid Grid.Column="0">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="*" />
-                <RowDefinition Height="Auto" />
-            </Grid.RowDefinitions>
-            <Border Grid.Row="0"
-                    Padding="6,4"
-                    BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
-                    BorderThickness="0,0,0,1">
-                <DockPanel>
-                    <ui:Button DockPanel.Dock="Left"
-                               Appearance="Primary"
-                               FontSize="11"
-                               Padding="8,3"
-                               Command="{Binding RefreshTargetPanelsCommand}">
-                        <StackPanel Orientation="Horizontal">
-                            <ui:SymbolIcon Symbol="ArrowSync24"
-                                           Margin="0,0,5,0" />
-                            <TextBlock Text="刷新" />
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="653" />
+                <ColumnDefinition Width="4" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <Grid Grid.Column="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="39" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <Border Grid.Row="0"
+                        Padding="6,4"
+                        BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                        BorderThickness="0,0,0,1">
+                    <Grid>
+                        <ui:Button Width="59"
+                                   Height="22"
+                                   HorizontalAlignment="Left"
+                                   Padding="7,2"
+                                   Appearance="Primary"
+                                   Command="{Binding RefreshTargetPanelsCommand}">
+                            <StackPanel Orientation="Horizontal">
+                                <ui:SymbolIcon Symbol="ArrowSync24"
+                                               FontSize="12"
+                                               Margin="0,0,5,0" />
+                                <TextBlock Text="刷新" />
+                            </StackPanel>
+                        </ui:Button>
+                        <StackPanel HorizontalAlignment="Right"
+                                    Orientation="Horizontal">
+                            <TextBlock Margin="0,0,5,0"
+                                       VerticalAlignment="Center"
+                                       FontSize="11"
+                                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                       Text="搜索:" />
+                            <TextBox x:Name="ModuleSearchBox"
+                                     Width="160"
+                                     Height="30"
+                                     Padding="5,2"
+                                     TextChanged="OnFilterChanged" />
                         </StackPanel>
-                    </ui:Button>
-                    <TextBlock DockPanel.Dock="Right"
-                               Margin="8,0,5,0"
-                               VerticalAlignment="Center"
-                               FontSize="11"
-                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                               Text="搜索:" />
-                    <TextBox x:Name="ModuleSearchBox"
-                             Height="26"
-                             Padding="6,2"
-                             FontFamily="Cascadia Code, Consolas, monospace"
-                             FontSize="11"
-                             TextChanged="OnFilterChanged" />
-                </DockPanel>
-            </Border>
+                    </Grid>
+                </Border>
 
-            <DataGrid x:Name="ModuleGrid"
-                      Grid.Row="1"
-                      ItemsSource="{Binding Modules}"
-                      SelectedItem="{Binding SelectedModule}"
-                      AutoGenerateColumns="False"
-                      IsReadOnly="True"
-                      CanUserAddRows="False"
-                      CanUserDeleteRows="False"
-                      HeadersVisibility="Column"
-                      ColumnHeaderHeight="32"
-                      GridLinesVisibility="Horizontal"
-                      EnableRowVirtualization="True"
-                      VirtualizingPanel.IsVirtualizing="True"
-                      VirtualizingPanel.VirtualizationMode="Recycling"
-                      BorderThickness="0"
-                      Background="Transparent"
-                      FontFamily="Cascadia Code, Consolas, monospace"
-                      FontSize="12"
-                      MouseDoubleClick="OnModuleGridDoubleClick">
-                <DataGrid.RowStyle>
-                    <Style TargetType="DataGridRow">
-                        <Setter Property="Foreground" Value="#E4000000" />
-                        <Setter Property="Background" Value="Transparent" />
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsMainModule}" Value="True">
-                                <Setter Property="FontWeight" Value="SemiBold" />
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </DataGrid.RowStyle>
-                <DataGrid.Columns>
-                    <DataGridTextColumn Header="名称"
-                                        Binding="{Binding Name}"
-                                        Width="*" />
-                    <DataGridTextColumn Header="基址"
-                                        Binding="{Binding BaseAddressText}"
-                                        Width="135" />
-                    <DataGridTextColumn Header="大小"
-                                        Binding="{Binding SizeText}"
-                                        Width="95" />
-                    <DataGridTextColumn Header="路径"
-                                        Binding="{Binding FilePath}"
-                                        Width="*" />
-                </DataGrid.Columns>
-            </DataGrid>
-
-            <Border Grid.Row="2"
-                    Padding="8,3"
-                    BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
-                    BorderThickness="0,1,0,0"
-                    Background="{DynamicResource SubtleFillColorSecondaryBrush}">
-                <TextBlock FontSize="11"
-                           Foreground="{DynamicResource TextFillColorSecondaryBrush}">
-                    <Run Text="模块数: " />
-                    <Run FontWeight="SemiBold"
-                         Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-                         Text="{Binding Modules.Count, Mode=OneWay}" />
-                </TextBlock>
-            </Border>
-        </Grid>
-
-        <GridSplitter Grid.Column="1"
-                      Width="5"
-                      HorizontalAlignment="Stretch"
-                      Background="{DynamicResource ControlStrokeColorDefaultBrush}" />
-
-        <Grid Grid.Column="2">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="*" />
-                <RowDefinition Height="Auto" />
-            </Grid.RowDefinitions>
-            <Border Grid.Row="0"
-                    Padding="6,4"
-                    BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
-                    BorderThickness="0,0,0,1">
-                <StackPanel Orientation="Horizontal">
-                    <ui:Button Appearance="Secondary"
-                               FontSize="11"
-                               Padding="9,3"
-                               Margin="0,0,3,0"
-                               IsEnabled="False"
-                               Content="导入表" />
-                    <ui:Button Appearance="Secondary"
-                               FontSize="11"
-                               Padding="9,3"
-                               IsEnabled="False"
-                               Content="导出表" />
-                </StackPanel>
-            </Border>
-            <Grid Grid.Row="1">
-                <TabControl>
-                <TabItem Header="导入表">
-                    <DataGrid ItemsSource="{Binding SelectedModuleImports}"
-                              AutoGenerateColumns="False"
-                              IsReadOnly="True"
-                              CanUserAddRows="False"
-                              CanUserDeleteRows="False"
-                              HeadersVisibility="Column"
-                              ColumnHeaderHeight="32"
-                              GridLinesVisibility="Horizontal"
-                              BorderThickness="0"
-                              Background="Transparent"
-                              FontFamily="Cascadia Code, Consolas, monospace"
-                              FontSize="12">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="地址"
-                                                Binding="{Binding AddressText}"
-                                                Width="140" />
-                            <DataGridTextColumn Header="模块"
-                                                Binding="{Binding ModuleName}"
-                                                Width="170" />
-                            <DataGridTextColumn Header="函数名"
-                                                Binding="{Binding FunctionName}"
-                                                Width="280" />
-                        </DataGrid.Columns>
-                    </DataGrid>
-                </TabItem>
-                <TabItem Header="导出表">
-                    <DataGrid ItemsSource="{Binding SelectedModuleExports}"
-                              AutoGenerateColumns="False"
-                              IsReadOnly="True"
-                              CanUserAddRows="False"
-                              CanUserDeleteRows="False"
-                              HeadersVisibility="Column"
-                              ColumnHeaderHeight="32"
-                              GridLinesVisibility="Horizontal"
-                              BorderThickness="0"
-                              Background="Transparent"
-                              FontFamily="Cascadia Code, Consolas, monospace"
-                              FontSize="12">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="地址"
-                                                Binding="{Binding AddressText}"
-                                                Width="140" />
-                            <DataGridTextColumn Header="序号"
-                                                Binding="{Binding OrdinalText}"
-                                                Width="80" />
-                            <DataGridTextColumn Header="名称"
-                                                Binding="{Binding Name}"
-                                                Width="360" />
-                        </DataGrid.Columns>
-                    </DataGrid>
-                </TabItem>
-                </TabControl>
-                <Border Panel.ZIndex="5"
-                        Background="{DynamicResource SubtleFillColorSecondaryBrush}">
-                    <Border.Style>
-                        <Style TargetType="Border">
-                            <Setter Property="Visibility" Value="Collapsed" />
+                <DataGrid x:Name="ModuleGrid"
+                          Grid.Row="1"
+                          ItemsSource="{Binding Modules}"
+                          SelectedItem="{Binding SelectedModule}"
+                          AutoGenerateColumns="False"
+                          IsReadOnly="True"
+                          CanUserAddRows="False"
+                          CanUserDeleteRows="False"
+                          HeadersVisibility="Column"
+                          ColumnHeaderHeight="32"
+                          GridLinesVisibility="Horizontal"
+                          EnableRowVirtualization="True"
+                          VirtualizingPanel.IsVirtualizing="True"
+                          VirtualizingPanel.VirtualizationMode="Recycling"
+                          BorderThickness="0"
+                          Background="Transparent"
+                          FontFamily="Cascadia Code, Consolas, monospace"
+                          FontSize="11"
+                          MouseDoubleClick="OnModuleGridDoubleClick">
+                    <DataGrid.RowStyle>
+                        <Style TargetType="DataGridRow">
+                            <Setter Property="Foreground" Value="#E4000000" />
+                            <Setter Property="Background" Value="Transparent" />
                             <Style.Triggers>
-                                <DataTrigger Binding="{Binding SelectedModule}"
-                                             Value="{x:Null}">
-                                    <Setter Property="Visibility" Value="Visible" />
+                                <DataTrigger Binding="{Binding IsMainModule}" Value="True">
+                                    <Setter Property="FontWeight" Value="SemiBold" />
                                 </DataTrigger>
                             </Style.Triggers>
                         </Style>
-                    </Border.Style>
-                    <TextBlock HorizontalAlignment="Center"
-                               VerticalAlignment="Center"
-                               Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                               Text="选择左侧模块以查看导入表" />
-                </Border>
+                    </DataGrid.RowStyle>
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="名称"
+                                            Binding="{Binding Name}"
+                                            Width="180" />
+                        <DataGridTextColumn Header="基址"
+                                            Binding="{Binding BaseAddressText}"
+                                            Width="160" />
+                        <DataGridTextColumn Header="大小"
+                                            Binding="{Binding SizeText}"
+                                            Width="80" />
+                        <DataGridTextColumn Header="路径"
+                                            Binding="{Binding FilePath}"
+                                            Width="*" />
+                    </DataGrid.Columns>
+                </DataGrid>
             </Grid>
-            <Border Grid.Row="2"
-                    Padding="8,3"
-                    BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
-                    BorderThickness="0,1,0,0"
-                    Background="{DynamicResource SubtleFillColorSecondaryBrush}">
-                <DockPanel>
-                    <TextBlock DockPanel.Dock="Left"
-                               FontSize="11"
-                               Foreground="{DynamicResource TextFillColorSecondaryBrush}">
-                        <Run Text="导入: " />
-                        <Run Text="{Binding SelectedModuleImports.Count, Mode=OneWay}" />
-                    </TextBlock>
-                    <TextBlock DockPanel.Dock="Right"
-                               FontSize="11"
-                               Foreground="{DynamicResource TextFillColorSecondaryBrush}">
-                        <Run Text="导出: " />
-                        <Run Text="{Binding SelectedModuleExports.Count, Mode=OneWay}" />
-                    </TextBlock>
-                    <Border />
-                </DockPanel>
-            </Border>
+
+            <GridSplitter Grid.Column="1"
+                          Width="4"
+                          HorizontalAlignment="Stretch"
+                          Background="{DynamicResource ControlStrokeColorDefaultBrush}" />
+
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="39" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <Border Grid.Row="0"
+                        Padding="6,4"
+                        BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                        BorderThickness="0,0,0,1">
+                    <StackPanel HorizontalAlignment="Right"
+                                Orientation="Horizontal">
+                        <TextBlock Margin="0,0,5,0"
+                                   VerticalAlignment="Center"
+                                   FontSize="11"
+                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                   Text="搜索:" />
+                        <TextBox Width="200"
+                                 Height="30"
+                                 Padding="5,2"
+                                 TextChanged="OnFilterChanged" />
+                    </StackPanel>
+                </Border>
+
+                <Grid Grid.Row="1">
+                    <TabControl>
+                        <TabItem Header="导入表">
+                            <DataGrid ItemsSource="{Binding SelectedModuleImports}"
+                                      AutoGenerateColumns="False"
+                                      IsReadOnly="True"
+                                      CanUserAddRows="False"
+                                      CanUserDeleteRows="False"
+                                      HeadersVisibility="Column"
+                                      ColumnHeaderHeight="32"
+                                      GridLinesVisibility="Horizontal"
+                                      BorderThickness="0"
+                                      Background="Transparent"
+                                      FontFamily="Cascadia Code, Consolas, monospace"
+                                      FontSize="11">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="地址"
+                                                        Binding="{Binding AddressText}"
+                                                        Width="160" />
+                                    <DataGridTextColumn Header="模块"
+                                                        Binding="{Binding ModuleName}"
+                                                        Width="150" />
+                                    <DataGridTextColumn Header="函数名"
+                                                        Binding="{Binding FunctionName}"
+                                                        Width="*" />
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </TabItem>
+                        <TabItem Header="导出表">
+                            <DataGrid ItemsSource="{Binding SelectedModuleExports}"
+                                      AutoGenerateColumns="False"
+                                      IsReadOnly="True"
+                                      CanUserAddRows="False"
+                                      CanUserDeleteRows="False"
+                                      HeadersVisibility="Column"
+                                      ColumnHeaderHeight="32"
+                                      GridLinesVisibility="Horizontal"
+                                      BorderThickness="0"
+                                      Background="Transparent"
+                                      FontFamily="Cascadia Code, Consolas, monospace"
+                                      FontSize="11">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="地址"
+                                                        Binding="{Binding AddressText}"
+                                                        Width="160" />
+                                    <DataGridTextColumn Header="序号"
+                                                        Binding="{Binding OrdinalText}"
+                                                        Width="80" />
+                                    <DataGridTextColumn Header="名称"
+                                                        Binding="{Binding Name}"
+                                                        Width="*" />
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </TabItem>
+                    </TabControl>
+                    <Border Panel.ZIndex="5"
+                            Background="{DynamicResource SubtleFillColorSecondaryBrush}">
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding SelectedModule}"
+                                                 Value="{x:Null}">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                        <TextBlock HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"
+                                   Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                   Text="选择左侧模块以查看导入表" />
+                    </Border>
+                </Grid>
+            </Grid>
         </Grid>
-        <controls:PanelProcessOverlay Grid.Column="0"
-                                      Grid.ColumnSpan="3" />
+
+        <Border Grid.Row="1"
+                Padding="8,3"
+                BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                BorderThickness="0,1,0,0"
+                Background="{DynamicResource SubtleFillColorSecondaryBrush}">
+            <DockPanel>
+                <TextBlock DockPanel.Dock="Left"
+                           FontSize="11"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}">
+                    <Run Text="模块数:  " />
+                    <Run Text="{Binding Modules.Count, Mode=OneWay}" />
+                </TextBlock>
+                <TextBlock DockPanel.Dock="Right"
+                           FontSize="11"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}">
+                    <Run Text="导入:  " />
+                    <Run Text="{Binding SelectedModuleImports.Count, Mode=OneWay}" />
+                    <Run Text="   导出:  " />
+                    <Run Text="{Binding SelectedModuleExports.Count, Mode=OneWay}" />
+                </TextBlock>
+                <Border />
+            </DockPanel>
+        </Border>
+
+        <controls:PanelProcessOverlay Grid.Row="0"
+                                      Grid.RowSpan="2" />
     </Grid>
 </UserControl>

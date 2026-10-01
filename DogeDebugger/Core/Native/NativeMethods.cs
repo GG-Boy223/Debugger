@@ -175,6 +175,12 @@ internal static class NativeMethods
     [DllImport("kernel32.dll", SetLastError = true)]
     internal static extern int ResumeThread(IntPtr threadHandle);
 
+    [DllImport("ntdll.dll")]
+    internal static extern int NtSuspendProcess(IntPtr processHandle);
+
+    [DllImport("ntdll.dll")]
+    internal static extern int NtResumeProcess(IntPtr processHandle);
+
     [StructLayout(LayoutKind.Sequential)]
     internal struct MemoryBasicInformation64
     {

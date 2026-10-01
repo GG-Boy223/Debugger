@@ -19,9 +19,11 @@ public sealed class UserModeDebugger : IAsyncDisposable
 
     private readonly TargetProcess _target;
     private readonly DisassemblerService _disassembler = new();
+    private readonly BreakpointConditionEvaluator _breakpointConditionEvaluator;
     private readonly Channel<DebuggerCommand> _commands;
     private readonly CancellationTokenSource _shutdown = new();
-    private readonly SemaphoreSlim _firstPause = new(0, 1);
+    private TaskCompletionSource<bool> _firstPause =
+        new(TaskCreationOptions.RunContinuationsAsynchronously);
 
     private Task? _eventLoop;
     private bool _attached;
@@ -34,10 +36,13 @@ public sealed class UserModeDebugger : IAsyncDisposable
     private PostBreakpointAction _postBreakpointAction;
     private ulong _pendingStepTarget;
     private ulong _pendingReturnAddress;
+    private bool _suppressBreakpointWithSingleStep;
+    private ulong? _temporarilySuppressedHardwareAddress;
 
     public UserModeDebugger(TargetProcess target)
     {
         _target = target;
+        _breakpointConditionEvaluator = new BreakpointConditionEvaluator(target);
         _commands = Channel.CreateUnbounded<DebuggerCommand>(
             new UnboundedChannelOptions
             {
@@ -46,11 +51,15 @@ public sealed class UserModeDebugger : IAsyncDisposable
                 AllowSynchronousContinuations = false
             });
         Breakpoints = new SoftwareBreakpointManager(target);
+        HardwareBreakpoints = new HardwareBreakpointManager();
+        HardwareBreakpoints.Changed += ApplyHardwareBreakpoints;
     }
 
     public TargetProcess Target => _target;
 
     public SoftwareBreakpointManager Breakpoints { get; }
+
+    public HardwareBreakpointManager HardwareBreakpoints { get; }
 
     public bool IsDebugging => _attached;
 
@@ -65,6 +74,136 @@ public sealed class UserModeDebugger : IAsyncDisposable
             ? new RegisterSnapshot()
             : GetRegisters(_currentThreadId);
 
+    public string? ValidateBreakpointCondition(string condition) =>
+        BreakpointConditionEvaluator.ValidateSyntax(condition);
+
+    internal void ReportDiagnostic(string message) =>
+        Diagnostic?.Invoke(message);
+
+    public bool SetCurrentInstructionPointer(ulong instructionPointer)
+    {
+        if (!_attached || !_paused || _currentThreadId == 0 || instructionPointer == 0)
+        {
+            return false;
+        }
+
+        if (!TrySetInstructionPointer(
+                _currentThreadId,
+                instructionPointer))
+        {
+            Diagnostic?.Invoke(
+                $"Set instruction pointer failed: 0x{instructionPointer:X}");
+            return false;
+        }
+
+        _currentInstructionPointer = instructionPointer;
+        RaiseStateChanged();
+        return true;
+    }
+
+    public bool SetRegisterValue(string name, ulong value)
+    {
+        if (!_attached || !_paused || _currentThreadId == 0 ||
+            string.IsNullOrWhiteSpace(name))
+        {
+            return false;
+        }
+
+        string register = name.Trim().TrimStart('$').ToUpperInvariant();
+        if (register is "IP" or "RIP" or "EIP")
+        {
+            return SetCurrentInstructionPointer(value);
+        }
+
+        using DebugThreadHandle handle = new(
+            NativeDebuggerMethods.OpenThread(
+                NativeDebuggerMethods.ThreadGetContext |
+                NativeDebuggerMethods.ThreadSetContext,
+                inheritHandle: false,
+                _currentThreadId));
+        if (handle.IsInvalid)
+        {
+            return false;
+        }
+
+        if (_target.Is64Bit)
+        {
+            unsafe
+            {
+                NativeDebuggerMethods.Context64 context = new()
+                {
+                    ContextFlags = NativeDebuggerMethods.ContextAmd64 |
+                                   ContextControl |
+                                   ContextInteger
+                };
+                if (!NativeDebuggerMethods.GetThreadContext(
+                        handle.DangerousGetHandle(),
+                        &context))
+                {
+                    return false;
+                }
+
+                switch (register)
+                {
+                    case "RAX": context.Rax = value; break;
+                    case "RBX": context.Rbx = value; break;
+                    case "RCX": context.Rcx = value; break;
+                    case "RDX": context.Rdx = value; break;
+                    case "RSI": context.Rsi = value; break;
+                    case "RDI": context.Rdi = value; break;
+                    case "RBP": context.Rbp = value; break;
+                    case "RSP": context.Rsp = value; break;
+                    case "R8": context.R8 = value; break;
+                    case "R9": context.R9 = value; break;
+                    case "R10": context.R10 = value; break;
+                    case "R11": context.R11 = value; break;
+                    case "R12": context.R12 = value; break;
+                    case "R13": context.R13 = value; break;
+                    case "R14": context.R14 = value; break;
+                    case "R15": context.R15 = value; break;
+                    default: return false;
+                }
+
+                return NativeDebuggerMethods.SetThreadContext(
+                    handle.DangerousGetHandle(),
+                    &context);
+            }
+        }
+
+        unsafe
+        {
+            NativeDebuggerMethods.Context32 context = new()
+            {
+                ContextFlags = ContextI386 |
+                               ContextControl |
+                               ContextInteger
+            };
+            if (!NativeDebuggerMethods.Wow64GetThreadContext(
+                    handle.DangerousGetHandle(),
+                    &context))
+            {
+                return false;
+            }
+
+            switch (register)
+            {
+                case "EAX": context.Eax = checked((uint)value); break;
+                case "EBX": context.Ebx = checked((uint)value); break;
+                case "ECX": context.Ecx = checked((uint)value); break;
+                case "EDX": context.Edx = checked((uint)value); break;
+                case "ESI": context.Esi = checked((uint)value); break;
+                case "EDI": context.Edi = checked((uint)value); break;
+                case "EBP": context.Ebp = checked((uint)value); break;
+                case "ESP": context.Esp = checked((uint)value); break;
+                default: return false;
+            }
+
+            return NativeDebuggerMethods.Wow64SetThreadContext(
+                handle.DangerousGetHandle(),
+                &context);
+        }
+    }
+
     public event EventHandler<DebuggerPausedEventArgs>? Paused;
 
     public event EventHandler<DebuggerEventEventArgs>? DebugEventReceived;
@@ -72,9 +211,13 @@ public sealed class UserModeDebugger : IAsyncDisposable
     public event Func<BreakpointFilterRequestEventArgs, CancellationToken, ValueTask<bool>>?
         BreakpointFilterRequested;
 
+    public event Func<InternalBreakpointHitEventArgs, bool>? InternalBreakpointHit;
+
     public event EventHandler<DebuggerStateChangedEventArgs>? StateChanged;
 
     public event Action<string>? Diagnostic;
+
+    public event Action<BreakpointEntry, uint>? HardwareBreakpointHit;
 
     public async Task<bool> AttachAsync(
         int processId,
@@ -93,6 +236,7 @@ public sealed class UserModeDebugger : IAsyncDisposable
             return false;
         }
 
+        ResetFirstPauseSignal();
         _eventLoop = Task.Run(
             () => RunEventLoopOnDedicatedThread(
                 () => AttachLoopAsync(processId, _shutdown.Token)),
@@ -100,7 +244,7 @@ public sealed class UserModeDebugger : IAsyncDisposable
 
         try
         {
-            Task firstPauseTask = _firstPause.WaitAsync(cancellationToken);
+            Task firstPauseTask = _firstPause.Task.WaitAsync(cancellationToken);
             Task completedTask = await Task.WhenAny(firstPauseTask, _eventLoop)
                 .ConfigureAwait(false);
             if (completedTask == _eventLoop)
@@ -132,6 +276,7 @@ public sealed class UserModeDebugger : IAsyncDisposable
             return false;
         }
 
+        ResetFirstPauseSignal();
         _eventLoop = Task.Run(
             () => RunEventLoopOnDedicatedThread(
                 () => LaunchLoopAsync(commandLine, workingDirectory, _shutdown.Token)),
@@ -139,7 +284,7 @@ public sealed class UserModeDebugger : IAsyncDisposable
 
         try
         {
-            Task firstPauseTask = _firstPause.WaitAsync(cancellationToken);
+            Task firstPauseTask = _firstPause.Task.WaitAsync(cancellationToken);
             Task completedTask = await Task.WhenAny(firstPauseTask, _eventLoop)
                 .ConfigureAwait(false);
             if (completedTask == _eventLoop)
@@ -284,9 +429,10 @@ public sealed class UserModeDebugger : IAsyncDisposable
 
         await DetachAsync(CancellationToken.None).ConfigureAwait(false);
         Breakpoints.Dispose();
+        HardwareBreakpoints.Changed -= ApplyHardwareBreakpoints;
+        HardwareBreakpoints.Dispose();
         _shutdown.Cancel();
         _shutdown.Dispose();
-        _firstPause.Dispose();
         _disposed = true;
         GC.SuppressFinalize(this);
     }
@@ -307,6 +453,13 @@ public sealed class UserModeDebugger : IAsyncDisposable
         await _commands.Writer.WriteAsync(command, cancellationToken).ConfigureAwait(false);
         return await completion.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
     }
+
+    private void ResetFirstPauseSignal() =>
+        _firstPause = new TaskCompletionSource<bool>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+
+    private void SignalFirstPause() =>
+        _firstPause.TrySetResult(true);
 
     /// <summary>
     /// Runs the debugger event loop on one dedicated thread. Windows requires
@@ -380,7 +533,17 @@ public sealed class UserModeDebugger : IAsyncDisposable
                         debugEvent,
                         cancellationToken))
                 {
-                    Breakpoints.ArmAll();
+                    if (_suppressBreakpointWithSingleStep)
+                    {
+                        _suppressBreakpointWithSingleStep = false;
+                        SetTrapFlag(debugEvent.ThreadId, enabled: true);
+                        _postBreakpointAction = PostBreakpointAction.Continue;
+                    }
+                    else
+                    {
+                        Breakpoints.ArmAll();
+                    }
+
                     if (!NativeDebuggerMethods.ContinueDebugEvent(
                             debugEvent.ProcessId,
                             debugEvent.ThreadId,
@@ -398,7 +561,7 @@ public sealed class UserModeDebugger : IAsyncDisposable
                     _currentThreadId = debugEvent.ThreadId;
                     _currentInstructionPointer = record.Address;
                     RaiseStateChanged();
-                    _firstPause.Release();
+                    SignalFirstPause();
 
                     RegisterSnapshot registers = GetRegisters(debugEvent.ThreadId);
                     Paused?.Invoke(
@@ -709,6 +872,10 @@ public sealed class UserModeDebugger : IAsyncDisposable
                 CloseDebugEventHandle(debugEvent.Union.LoadDll.File);
                 return false;
 
+            case NativeDebuggerMethods.DebugEventCode.CreateThread:
+                ApplyHardwareBreakpoints(debugEvent.ThreadId);
+                return false;
+
             case NativeDebuggerMethods.DebugEventCode.Exception:
                 return HandleException(debugEvent, out pauseReason, out continueStatus);
 
@@ -736,7 +903,15 @@ public sealed class UserModeDebugger : IAsyncDisposable
             if (Breakpoints.HandleHit(exceptionAddress, out BreakpointEntry? breakpoint) &&
                 breakpoint is not null)
             {
-                SetInstructionPointer(debugEvent.ThreadId, breakpoint.Address);
+                if (!TrySetInstructionPointer(
+                        debugEvent.ThreadId,
+                        breakpoint.Address))
+                {
+                    Diagnostic?.Invoke(
+                        $"Restore breakpoint instruction pointer failed: " +
+                        $"0x{breakpoint.Address:X}");
+                }
+
                 _currentInstructionPointer = breakpoint.Address;
 
                 if (breakpoint.IsTemporary)
@@ -752,9 +927,18 @@ public sealed class UserModeDebugger : IAsyncDisposable
             }
 
             pauseReason = DebuggerPauseReason.SystemBreakpoint;
-            if (_expectInitialAttachBreakpoint || _breakRequested)
+            if (_expectInitialAttachBreakpoint)
             {
+                // Attach-time process breakpoints are transport noise, not a
+                // user-visible pause. Release the attach waiter and continue
+                // so the UI can select the primary module entry point.
                 _expectInitialAttachBreakpoint = false;
+                SignalFirstPause();
+                return false;
+            }
+
+            if (_breakRequested)
+            {
                 _breakRequested = false;
                 return true;
             }
@@ -782,9 +966,29 @@ public sealed class UserModeDebugger : IAsyncDisposable
         pauseReason = DebuggerPauseReason.SingleStep;
         SetTrapFlag(debugEvent.ThreadId, enabled: false);
 
+        if (TryHandleHardwareBreakpoint(
+                debugEvent.ThreadId,
+                out bool suppressHardwareBreakpoint))
+        {
+            if (suppressHardwareBreakpoint)
+            {
+                _postBreakpointAction = PostBreakpointAction.Continue;
+                return false;
+            }
+
+            pauseReason = DebuggerPauseReason.Breakpoint;
+            return true;
+        }
+
         if (_postBreakpointAction == PostBreakpointAction.Continue)
         {
             _postBreakpointAction = PostBreakpointAction.None;
+            if (_temporarilySuppressedHardwareAddress is not null)
+            {
+                _temporarilySuppressedHardwareAddress = null;
+                ApplyHardwareBreakpoints();
+            }
+
             Breakpoints.ArmAll();
             return false;
         }
@@ -813,15 +1017,76 @@ public sealed class UserModeDebugger : IAsyncDisposable
         CancellationToken cancellationToken)
     {
         if (record.Kind != DebuggerEventKind.Exception ||
-            record.ExceptionCode != ExceptionBreakpoint ||
-            BreakpointFilterRequested is null)
+            record.ExceptionCode != ExceptionBreakpoint)
+        {
+            return false;
+        }
+
+        BreakpointEntry? breakpoint = null;
+        ulong breakpointAddress = 0;
+        if (Breakpoints.TryResolveHit(record.Address, out breakpoint) &&
+            breakpoint is not null)
+        {
+            breakpointAddress = breakpoint.Address;
+        }
+        if (breakpoint is { IsInternal: true } &&
+            InternalBreakpointHit is not null)
+        {
+            InternalBreakpointHitEventArgs internalHit = new()
+            {
+                Address = breakpointAddress,
+                OwnerId = breakpoint.InternalOwnerId,
+                ThreadId = debugEvent.ThreadId,
+                Registers = GetRegisters(debugEvent.ThreadId)
+            };
+            foreach (Delegate handler in InternalBreakpointHit.GetInvocationList())
+            {
+                if (handler is not Func<InternalBreakpointHitEventArgs, bool> internalHandler)
+                {
+                    continue;
+                }
+
+                if (internalHandler(internalHit))
+                {
+                    return false;
+                }
+            }
+        }
+
+        if (breakpoint is not null &&
+            !string.IsNullOrWhiteSpace(breakpoint.Condition))
+        {
+            BreakpointConditionResult condition =
+                _breakpointConditionEvaluator.Evaluate(
+                    breakpoint,
+                    GetRegisters(debugEvent.ThreadId));
+            Breakpoints.SetConditionError(
+                breakpoint.Address,
+                condition.HasError);
+            if (condition.HasError)
+            {
+                Diagnostic?.Invoke(
+                    $"Breakpoint condition error @ 0x{breakpoint.Address:X}: " +
+                    condition.ErrorMessage);
+                return false;
+            }
+
+            if (!condition.ShouldBreak)
+            {
+                Breakpoints.RecordConditionMiss(breakpoint.Address);
+                _suppressBreakpointWithSingleStep = true;
+                return true;
+            }
+        }
+
+        if (BreakpointFilterRequested is null)
         {
             return false;
         }
 
         BreakpointFilterRequestEventArgs request = new()
         {
-            Address = record.Address == 0 ? 0 : record.Address - 1,
+            Address = breakpointAddress,
             ProcessId = debugEvent.ProcessId,
             ThreadId = debugEvent.ThreadId,
             InstructionPointer = record.Address
@@ -916,9 +1181,7 @@ public sealed class UserModeDebugger : IAsyncDisposable
                 NativeDebuggerMethods.Context64 context = new()
                 {
                     ContextFlags = NativeDebuggerMethods.ContextAmd64 |
-                                   ContextControl |
-                                   ContextInteger |
-                                   ContextDebugRegisters
+                                   ContextControl
                 };
                 if (!NativeDebuggerMethods.GetThreadContext(
                         handle.DangerousGetHandle(),
@@ -997,7 +1260,9 @@ public sealed class UserModeDebugger : IAsyncDisposable
         }
     }
 
-    private void SetInstructionPointer(uint threadId, ulong instructionPointer)
+    private bool TrySetInstructionPointer(
+        uint threadId,
+        ulong instructionPointer)
     {
         using DebugThreadHandle handle = new(
             NativeDebuggerMethods.OpenThread(
@@ -1008,7 +1273,7 @@ public sealed class UserModeDebugger : IAsyncDisposable
 
         if (handle.IsInvalid)
         {
-            return;
+            return false;
         }
 
         if (_target.Is64Bit)
@@ -1027,13 +1292,13 @@ public sealed class UserModeDebugger : IAsyncDisposable
                         &context))
                 {
                     context.Rip = instructionPointer;
-                    NativeDebuggerMethods.SetThreadContext(
+                    return NativeDebuggerMethods.SetThreadContext(
                         handle.DangerousGetHandle(),
                         &context);
                 }
             }
 
-            return;
+            return false;
         }
 
         unsafe
@@ -1050,11 +1315,13 @@ public sealed class UserModeDebugger : IAsyncDisposable
                     &context))
             {
                 context.Eip = checked((uint)instructionPointer);
-                NativeDebuggerMethods.Wow64SetThreadContext(
+                return NativeDebuggerMethods.Wow64SetThreadContext(
                     handle.DangerousGetHandle(),
                     &context);
             }
         }
+
+        return false;
     }
 
     private void SetTrapFlag(uint threadId, bool enabled)
@@ -1089,10 +1356,107 @@ public sealed class UserModeDebugger : IAsyncDisposable
                     context.EFlags = enabled
                         ? context.EFlags | 0x100
                         : context.EFlags & ~0x100u;
-                    NativeDebuggerMethods.SetThreadContext(
-                        handle.DangerousGetHandle(),
-                        &context);
+                    if (!NativeDebuggerMethods.SetThreadContext(
+                            handle.DangerousGetHandle(),
+                            &context))
+                    {
+                        Diagnostic?.Invoke(
+                            $"Set trap flag failed for thread {threadId}.");
+                    }
                 }
+            }
+
+            return;
+        }
+
+        unsafe
+        {
+            NativeDebuggerMethods.Context32 context = new()
+            {
+                ContextFlags = ContextI386 |
+                               ContextControl
+            };
+            if (NativeDebuggerMethods.Wow64GetThreadContext(
+                    handle.DangerousGetHandle(),
+                    &context))
+            {
+                context.EFlags = enabled
+                    ? context.EFlags | 0x100u
+                    : context.EFlags & ~0x100u;
+                if (!NativeDebuggerMethods.Wow64SetThreadContext(
+                        handle.DangerousGetHandle(),
+                        &context))
+                {
+                    Diagnostic?.Invoke(
+                        $"Set trap flag failed for thread {threadId}.");
+                }
+            }
+        }
+    }
+
+    private void ApplyHardwareBreakpoints()
+    {
+        if (!_attached || !_target.IsOpen)
+        {
+            return;
+        }
+
+        try
+        {
+            System.Diagnostics.Process process =
+                System.Diagnostics.Process.GetProcessById(_target.ProcessId);
+            foreach (System.Diagnostics.ProcessThread thread in process.Threads)
+            {
+                ApplyHardwareBreakpoints(checked((uint)thread.Id));
+            }
+        }
+        catch (Exception exception)
+        {
+            Diagnostic?.Invoke($"Apply hardware breakpoints failed: {exception.Message}");
+        }
+    }
+
+    private void ApplyHardwareBreakpoints(uint threadId)
+    {
+        BreakpointEntry[] active = HardwareBreakpoints.Entries
+            .Where(static entry => entry.IsEnabled)
+            .Where(entry => entry.Address != _temporarilySuppressedHardwareAddress)
+            .Take(4)
+            .ToArray();
+
+        using DebugThreadHandle handle = new(
+            NativeDebuggerMethods.OpenThread(
+                NativeDebuggerMethods.ThreadGetContext |
+                NativeDebuggerMethods.ThreadSetContext,
+                inheritHandle: false,
+                threadId));
+        if (handle.IsInvalid)
+        {
+            return;
+        }
+
+        if (_target.Is64Bit)
+        {
+            unsafe
+            {
+                NativeDebuggerMethods.Context64 context = new()
+                {
+                    ContextFlags = NativeDebuggerMethods.ContextAmd64 |
+                                   ContextControl |
+                                   ContextInteger |
+                                   ContextDebugRegisters
+                };
+                if (!NativeDebuggerMethods.GetThreadContext(
+                        handle.DangerousGetHandle(),
+                        &context))
+                {
+                    return;
+                }
+
+                ApplyHardwareBreakpoints64(ref context, active);
+                NativeDebuggerMethods.SetThreadContext(
+                    handle.DangerousGetHandle(),
+                    &context);
             }
 
             return;
@@ -1107,17 +1471,263 @@ public sealed class UserModeDebugger : IAsyncDisposable
                                ContextInteger |
                                ContextDebugRegisters
             };
-            if (NativeDebuggerMethods.Wow64GetThreadContext(
+            if (!NativeDebuggerMethods.Wow64GetThreadContext(
                     handle.DangerousGetHandle(),
                     &context))
             {
-                context.EFlags = enabled
-                    ? context.EFlags | 0x100u
-                    : context.EFlags & ~0x100u;
-                NativeDebuggerMethods.Wow64SetThreadContext(
+                return;
+            }
+
+            ApplyHardwareBreakpoints32(ref context, active);
+            NativeDebuggerMethods.Wow64SetThreadContext(
+                handle.DangerousGetHandle(),
+                &context);
+        }
+    }
+
+    private unsafe void ApplyHardwareBreakpoints64(
+        ref NativeDebuggerMethods.Context64 context,
+        BreakpointEntry[] active)
+    {
+        context.Dr0 = 0;
+        context.Dr1 = 0;
+        context.Dr2 = 0;
+        context.Dr3 = 0;
+        ulong dr7 = 0;
+        for (int index = 0; index < active.Length; index++)
+        {
+            ulong address = active[index].Address;
+            switch (index)
+            {
+                case 0:
+                    context.Dr0 = address;
+                    break;
+                case 1:
+                    context.Dr1 = address;
+                    break;
+                case 2:
+                    context.Dr2 = address;
+                    break;
+                case 3:
+                    context.Dr3 = address;
+                    break;
+            }
+
+            dr7 |= 1UL << (index * 2);
+            uint rw = active[index].Kind switch
+            {
+                BreakpointKind.HardwareWrite => 1u,
+                BreakpointKind.HardwareRead or
+                    BreakpointKind.HardwareReadWrite => 3u,
+                _ => 0u
+            };
+            dr7 |= (ulong)rw << (16 + (index * 4));
+        }
+
+        context.Dr7 = dr7;
+    }
+
+    private unsafe void ApplyHardwareBreakpoints32(
+        ref NativeDebuggerMethods.Context32 context,
+        BreakpointEntry[] active)
+    {
+        context.Dr0 = 0;
+        context.Dr1 = 0;
+        context.Dr2 = 0;
+        context.Dr3 = 0;
+        uint dr7 = 0;
+        for (int index = 0; index < active.Length; index++)
+        {
+            uint address = checked((uint)active[index].Address);
+            switch (index)
+            {
+                case 0:
+                    context.Dr0 = address;
+                    break;
+                case 1:
+                    context.Dr1 = address;
+                    break;
+                case 2:
+                    context.Dr2 = address;
+                    break;
+                case 3:
+                    context.Dr3 = address;
+                    break;
+            }
+
+            dr7 |= 1u << (index * 2);
+            uint rw = active[index].Kind switch
+            {
+                BreakpointKind.HardwareWrite => 1u,
+                BreakpointKind.HardwareRead or
+                    BreakpointKind.HardwareReadWrite => 3u,
+                _ => 0u
+            };
+            dr7 |= rw << (16 + (index * 4));
+        }
+
+        context.Dr7 = dr7;
+    }
+
+    private bool TryHandleHardwareBreakpoint(
+        uint threadId,
+        out bool suppressHardwareBreakpoint)
+    {
+        suppressHardwareBreakpoint = false;
+        if (HardwareBreakpoints.Entries.Count == 0)
+        {
+            return false;
+        }
+
+        ulong dr6 = ReadDebugStatus(threadId);
+        if (dr6 == 0 || (dr6 & 0xFUL) == 0)
+        {
+            return false;
+        }
+
+        int slot = System.Numerics.BitOperations.TrailingZeroCount(dr6 & 0xFUL);
+        BreakpointEntry[] entries = HardwareBreakpoints.Entries.ToArray();
+        if (slot < 0 || slot >= entries.Length)
+        {
+            ClearDebugStatus(threadId);
+            return false;
+        }
+
+        BreakpointEntry breakpoint = entries[slot];
+        HardwareBreakpoints.RecordHit(breakpoint.Address);
+        HardwareBreakpointHit?.Invoke(breakpoint, threadId);
+        ClearDebugStatus(threadId);
+        if (string.IsNullOrWhiteSpace(breakpoint.Condition))
+        {
+            return true;
+        }
+
+        BreakpointConditionResult condition =
+            _breakpointConditionEvaluator.Evaluate(
+                breakpoint,
+                GetRegisters(threadId));
+        if (!condition.HasError && condition.ShouldBreak)
+        {
+            return true;
+        }
+
+        if (condition.HasError)
+        {
+            Diagnostic?.Invoke(
+                $"Hardware breakpoint condition error @ 0x{breakpoint.Address:X}: " +
+                condition.ErrorMessage);
+        }
+        else
+        {
+            HardwareBreakpoints.RecordConditionMiss(breakpoint.Address);
+        }
+
+        _temporarilySuppressedHardwareAddress = breakpoint.Address;
+        ApplyHardwareBreakpoints();
+        SetTrapFlag(threadId, enabled: true);
+        suppressHardwareBreakpoint = true;
+        return true;
+    }
+
+    private ulong ReadDebugStatus(uint threadId)
+    {
+        using DebugThreadHandle handle = new(
+            NativeDebuggerMethods.OpenThread(
+                NativeDebuggerMethods.ThreadGetContext |
+                NativeDebuggerMethods.ThreadSetContext,
+                inheritHandle: false,
+                threadId));
+        if (handle.IsInvalid)
+        {
+            return 0;
+        }
+
+        if (_target.Is64Bit)
+        {
+            unsafe
+            {
+                NativeDebuggerMethods.Context64 context = new()
+                {
+                    ContextFlags = NativeDebuggerMethods.ContextAmd64 |
+                                   ContextDebugRegisters
+                };
+                return NativeDebuggerMethods.GetThreadContext(
+                        handle.DangerousGetHandle(),
+                        &context)
+                    ? context.Dr6
+                    : 0;
+            }
+        }
+
+        unsafe
+        {
+            NativeDebuggerMethods.Context32 context = new()
+            {
+                ContextFlags = ContextI386 | ContextDebugRegisters
+            };
+            return NativeDebuggerMethods.Wow64GetThreadContext(
+                    handle.DangerousGetHandle(),
+                    &context)
+                ? context.Dr6
+                : 0;
+        }
+    }
+
+    private void ClearDebugStatus(uint threadId)
+    {
+        using DebugThreadHandle handle = new(
+            NativeDebuggerMethods.OpenThread(
+                NativeDebuggerMethods.ThreadGetContext |
+                NativeDebuggerMethods.ThreadSetContext,
+                inheritHandle: false,
+                threadId));
+        if (handle.IsInvalid)
+        {
+            return;
+        }
+
+        if (_target.Is64Bit)
+        {
+            unsafe
+            {
+                NativeDebuggerMethods.Context64 context = new()
+                {
+                    ContextFlags = NativeDebuggerMethods.ContextAmd64 |
+                                   ContextDebugRegisters
+                };
+                if (!NativeDebuggerMethods.GetThreadContext(
+                        handle.DangerousGetHandle(),
+                        &context))
+                {
+                    return;
+                }
+
+                context.Dr6 = 0;
+                NativeDebuggerMethods.SetThreadContext(
                     handle.DangerousGetHandle(),
                     &context);
             }
+
+            return;
+        }
+
+        unsafe
+        {
+            NativeDebuggerMethods.Context32 context = new()
+            {
+                ContextFlags = ContextI386 | ContextDebugRegisters
+            };
+            if (!NativeDebuggerMethods.Wow64GetThreadContext(
+                    handle.DangerousGetHandle(),
+                    &context))
+            {
+                return;
+            }
+
+            context.Dr6 = 0;
+            NativeDebuggerMethods.Wow64SetThreadContext(
+                handle.DangerousGetHandle(),
+                &context);
         }
     }
 

@@ -14,5 +14,6 @@ public enum MemoryValueKind
     Double,
     Utf8String,
     Utf16String,
-    ByteArray
+    ByteArray,
+    AllTypes
 }

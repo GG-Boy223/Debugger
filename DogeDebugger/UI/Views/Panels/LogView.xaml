@@ -1,51 +1,117 @@
 <UserControl x:Class="DogeDebugger.UI.Views.Panels.LogView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml">
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             Loaded="OnLogViewLoaded"
+             Unloaded="OnLogViewUnloaded">
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+    </UserControl.Resources>
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
+            <RowDefinition Height="40" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
+
         <Border Grid.Row="0"
-                Padding="6,4"
+                Padding="4"
                 BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
                 BorderThickness="0,0,0,1">
-            <ui:Button Appearance="Secondary"
-                       FontSize="11"
-                       Padding="8,3"
-                       HorizontalAlignment="Left"
-                       Click="OnClearLogClick">
-                <StackPanel Orientation="Horizontal">
-                    <ui:SymbolIcon Symbol="Delete24"
-                                   Margin="0,0,5,0" />
-                    <TextBlock Text="清除日志" />
+            <Grid>
+                <StackPanel HorizontalAlignment="Left"
+                            Orientation="Horizontal">
+                    <ui:Button Width="62"
+                               Height="25"
+                               Margin="0,4,0,0"
+                               Padding="8,2"
+                               HorizontalContentAlignment="Center"
+                               Appearance="Primary"
+                               Click="OnClearLogClick">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="Delete24"
+                                           FontSize="12"
+                                           Margin="0,0,5,0" />
+                            <TextBlock Text="清除" />
+                        </StackPanel>
+                    </ui:Button>
+                    <CheckBox x:Name="LogAutoScroll"
+                              Width="120"
+                              Height="32"
+                              Margin="8,0,0,0"
+                              VerticalContentAlignment="Center"
+                              Content="自动滚动"
+                              IsChecked="True"
+                              Checked="OnLogFilterChanged"
+                              Unchecked="OnLogFilterChanged" />
+                    <CheckBox x:Name="LogShowTimestamp"
+                              Width="120"
+                              Height="32"
+                              Margin="8,0,0,0"
+                              VerticalContentAlignment="Center"
+                              Content="显示时间戳"
+                              IsChecked="True"
+                              Checked="OnLogFilterChanged"
+                              Unchecked="OnLogFilterChanged" />
                 </StackPanel>
-            </ui:Button>
+
+                <StackPanel HorizontalAlignment="Right"
+                            Orientation="Horizontal">
+                    <TextBlock Margin="0,0,8,0"
+                               VerticalAlignment="Center"
+                               Text="过滤" />
+                    <CheckBox x:Name="LogFilterSystem"
+                              Width="120"
+                              Height="32"
+                              VerticalContentAlignment="Center"
+                              Content="系统"
+                              IsChecked="True"
+                              Checked="OnLogFilterChanged"
+                              Unchecked="OnLogFilterChanged" />
+                    <CheckBox x:Name="LogFilterDebugEvents"
+                              Width="120"
+                              Height="32"
+                              VerticalContentAlignment="Center"
+                              Content="调试事件"
+                              Checked="OnLogFilterChanged"
+                              Unchecked="OnLogFilterChanged" />
+                </StackPanel>
+            </Grid>
         </Border>
-        <DataGrid Grid.Row="1"
-                  ItemsSource="{Binding LogMessages}"
-                  AutoGenerateColumns="False"
-                  IsReadOnly="True"
-                  CanUserAddRows="False"
-                  CanUserDeleteRows="False"
-                  HeadersVisibility="Column"
-                  ColumnHeaderHeight="28"
-                  GridLinesVisibility="Horizontal"
-                  BorderThickness="0"
-                  Background="Transparent"
-                  FontFamily="Cascadia Code, Consolas, monospace"
-                  FontSize="12"
-                  EnableRowVirtualization="True"
-                  VirtualizingPanel.IsVirtualizing="True">
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="时间"
-                                    Binding="{Binding TimestampText}"
-                                    Width="100" />
-                <DataGridTextColumn Header="事件"
-                                    Binding="{Binding Message}"
-                                    Width="730" />
-            </DataGrid.Columns>
-        </DataGrid>
+
+        <ListBox x:Name="LogListBox"
+                 Grid.Row="1"
+                 Tag="True"
+                 ItemsSource="{Binding LogMessages}"
+                 BorderThickness="0"
+                 Background="Transparent"
+                 FontFamily="Cascadia Code, Consolas, monospace"
+                 FontSize="12"
+                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                 ScrollViewer.VerticalScrollBarVisibility="Auto"
+                 VirtualizingPanel.IsVirtualizing="True"
+                 VirtualizingPanel.VirtualizationMode="Recycling">
+            <ListBox.ItemContainerStyle>
+                <Style TargetType="ListBoxItem">
+                    <Setter Property="Padding" Value="4,1" />
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                </Style>
+            </ListBox.ItemContainerStyle>
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="100" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0"
+                                   Text="{Binding TimestampText}"
+                                   Visibility="{Binding Tag, ElementName=LogListBox, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                        <TextBlock Grid.Column="1"
+                                   Text="{Binding Message}"
+                                   TextWrapping="Wrap" />
+                    </Grid>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
     </Grid>
 </UserControl>

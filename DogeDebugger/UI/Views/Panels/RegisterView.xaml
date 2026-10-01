@@ -3,7 +3,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml">
     <Grid>
-        <DataGrid ItemsSource="{Binding Registers}"
+        <DataGrid x:Name="RegisterGrid"
+                  ItemsSource="{Binding Registers}"
                   AutoGenerateColumns="False"
                   IsReadOnly="True"
                   CanUserAddRows="False"
@@ -16,7 +17,47 @@
                   FontFamily="Cascadia Code, Consolas, monospace"
                   FontSize="12"
                   EnableRowVirtualization="True"
-                  VirtualizingPanel.IsVirtualizing="True">
+                  VirtualizingPanel.IsVirtualizing="True"
+                  PreviewMouseRightButtonDown="OnRegisterGridPreviewMouseRightButtonDown">
+            <DataGrid.RowStyle>
+                <Style TargetType="DataGridRow">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsChanged}" Value="True">
+                            <Setter Property="Background" Value="#FFFFF3CD" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </DataGrid.RowStyle>
+            <DataGrid.ContextMenu>
+                <ContextMenu x:Name="RegisterContextMenu"
+                             Opened="OnRegisterContextMenuOpened">
+                    <MenuItem Header="修改值(E)"
+                              InputGestureText="Enter"
+                              Click="OnEditRegisterValueClick" />
+                    <Separator />
+                    <MenuItem x:Name="NavigateDisassemblyMenu"
+                              Header="在反汇编中跳转(D)"
+                              Click="OnNavigateRegisterDisassemblyClick" />
+                    <MenuItem x:Name="NavigateHexMenu"
+                              Header="在数据视图中跳转(H)"
+                              Click="OnNavigateRegisterHexClick" />
+                    <Separator />
+                    <MenuItem Header="复制值(V)"
+                              Click="OnCopyRegisterValueClick" />
+                    <MenuItem Header="复制名称(N)"
+                              Click="OnCopyRegisterNameClick" />
+                    <Separator />
+                    <MenuItem x:Name="ToggleRegisterBaseMenu"
+                              Header="切换为十进制显示"
+                              IsCheckable="True"
+                              Click="OnToggleRegisterBaseClick" />
+                    <Separator />
+                    <MenuItem x:Name="HighlightChangedMenu"
+                              Header="高亮变化值"
+                              IsCheckable="True"
+                              Click="OnToggleHighlightChangedClick" />
+                </ContextMenu>
+            </DataGrid.ContextMenu>
             <DataGrid.Columns>
                 <DataGridTextColumn Header="寄存器"
                                     Binding="{Binding Name}"
@@ -42,14 +83,15 @@
             <StackPanel HorizontalAlignment="Center"
                         VerticalAlignment="Center">
                 <ui:SymbolIcon Symbol="LockClosed24"
-                               FontSize="38"
+                               FontSize="48"
                                Margin="0,0,0,8"
                                Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-                <TextBlock FontSize="20"
+                <TextBlock FontSize="16"
                            FontWeight="SemiBold"
                            HorizontalAlignment="Center"
                            Text="调试中断后可用" />
                 <TextBlock Margin="0,6,0,0"
+                           FontSize="12"
                            HorizontalAlignment="Center"
                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                            Text="附加调试器且线程中断后此面板可用" />

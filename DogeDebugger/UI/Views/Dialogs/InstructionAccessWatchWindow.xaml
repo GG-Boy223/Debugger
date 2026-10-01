@@ -1,0 +1,117 @@
+<Window x:Class="DogeDebugger.UI.Views.Dialogs.InstructionAccessWatchWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="{Binding Title}"
+        Width="720"
+        Height="520"
+        MinWidth="620"
+        MinHeight="420"
+        ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner"
+        Background="#FFF8F8F8"
+        FontFamily="Microsoft YaHei UI"
+        FontSize="12">
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+    </Window.Resources>
+    <Grid Margin="10,12,10,12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="28" />
+            <RowDefinition Height="24" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="48" />
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="82" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Column="0"
+                       VerticalAlignment="Center"
+                       Text="代码地址" />
+            <TextBlock Grid.Column="1"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center"
+                       FontFamily="Cascadia Code, Consolas, monospace"
+                       Text="{Binding CodeAddressText}" />
+        </Grid>
+
+        <TextBlock Grid.Row="1"
+                   VerticalAlignment="Center"
+                   Text="{Binding SummaryText}" />
+
+        <DataGrid x:Name="RecordGrid"
+                  Grid.Row="2"
+                  ItemsSource="{Binding Records}"
+                  SelectedItem="{Binding SelectedRecord, Mode=TwoWay}"
+                  AutoGenerateColumns="False"
+                  CanUserAddRows="False"
+                  CanUserDeleteRows="False"
+                  IsReadOnly="True"
+                  SelectionMode="Single"
+                  SelectionUnit="FullRow"
+                  HeadersVisibility="Column"
+                  ColumnHeaderHeight="27"
+                  RowHeight="32"
+                  GridLinesVisibility="Horizontal"
+                  BorderThickness="0"
+                  Background="Transparent"
+                  FontFamily="Cascadia Code, Consolas, monospace"
+                  FontSize="12"
+                  PreviewMouseRightButtonDown="OnRecordGridPreviewMouseRightButtonDown">
+            <DataGrid.ContextMenu>
+                <ContextMenu DataContext="{Binding PlacementTarget.DataContext,
+                                                    RelativeSource={RelativeSource Self}}"
+                             Opened="OnRecordContextMenuOpened">
+                    <MenuItem Header="复制地址"
+                              Command="{Binding CopySelectedAddressCommand}" />
+                    <MenuItem Header="复制值"
+                              Command="{Binding CopySelectedValueCommand}" />
+                    <Separator />
+                    <MenuItem Header="{Binding ValueFormatToggleMenuHeader}"
+                              Command="{Binding ToggleValueNumberBaseCommand}" />
+                    <MenuItem Header="在数据视图中查看"
+                              Command="{Binding NavigateSelectedAddressInHexViewCommand}" />
+                    <MenuItem Header="在 RTTI 中打开"
+                              Command="{Binding OpenSelectedAddressInRttiCommand}" />
+                    <MenuItem Header="解析 Mono 结构"
+                              Command="{Binding ParseSelectedMonoStructCommand}"
+                              Visibility="{Binding ShowParseSelectedMonoStructMenu,
+                                                   Converter={StaticResource BooleanToVisibilityConverter}}" />
+                </ContextMenu>
+            </DataGrid.ContextMenu>
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="地址"
+                                    Binding="{Binding AddressText}"
+                                    Width="330" />
+                <DataGridTextColumn Header="值"
+                                    Binding="{Binding ValueText}"
+                                    Width="*" />
+                <DataGridTextColumn Header="次数"
+                                    Binding="{Binding Count}"
+                                    Width="90" />
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <Grid Grid.Row="3"
+              Margin="0,12,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="82" />
+            </Grid.ColumnDefinitions>
+            <Button Grid.Column="0"
+                    Width="58"
+                    Height="31"
+                    HorizontalAlignment="Left"
+                    Padding="0"
+                    Command="{Binding ToggleActionCommand}"
+                    Content="{Binding ActionButtonText}" />
+            <ComboBox Grid.Column="1"
+                      Height="31"
+                      ItemsSource="{Binding ValueSizeOptions}"
+                      SelectedItem="{Binding SelectedValueSize}"
+                      DisplayMemberPath="DisplayText" />
+        </Grid>
+    </Grid>
+</Window>

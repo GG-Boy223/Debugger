@@ -40,7 +40,8 @@
                   SelectionMode="Single"
                   CanUserSortColumns="True"
                   HeadersVisibility="Column"
-                  ColumnHeaderHeight="32"
+                  ColumnHeaderHeight="36"
+                  RowHeight="33"
                   GridLinesVisibility="Horizontal"
                   EnableRowVirtualization="True"
                   VirtualizingPanel.IsVirtualizing="True"
@@ -49,7 +50,9 @@
                   BorderThickness="0"
                   FontFamily="Cascadia Code, Consolas, monospace"
                   FontSize="12"
-                  MouseDoubleClick="OnBreakpointGridDoubleClick">
+                  MouseDoubleClick="OnBreakpointGridDoubleClick"
+                  PreviewMouseRightButtonDown="OnBreakpointGridPreviewMouseRightButtonDown"
+                  ContextMenuOpening="OnBreakpointContextMenuOpening">
             <DataGrid.RowStyle>
                 <Style TargetType="DataGridRow">
                     <Setter Property="Foreground" Value="#E4000000" />
@@ -59,12 +62,15 @@
                             <Setter Property="Background"
                                     Value="{DynamicResource SystemFillColorSuccessBackgroundBrush}" />
                         </DataTrigger>
+                        <DataTrigger Binding="{Binding HasConditionError}" Value="True">
+                            <Setter Property="Foreground" Value="#FFE74C3C" />
+                        </DataTrigger>
                     </Style.Triggers>
                 </Style>
             </DataGrid.RowStyle>
             <DataGrid.Columns>
                 <DataGridTemplateColumn Header="启用"
-                                        Width="54">
+                                        Width="60">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <CheckBox HorizontalAlignment="Center"
@@ -76,40 +82,50 @@
                 </DataGridTemplateColumn>
                 <DataGridTextColumn Header="类型"
                                     Binding="{Binding KindText}"
-                                    Width="72" />
+                                    Width="80" />
                 <DataGridTextColumn Header="地址"
-                                    Binding="{Binding AddressText}"
-                                    Width="150" />
+                                    Binding="{Binding DisplayAddressText}"
+                                    Width="200" />
                 <DataGridTextColumn Header="模块"
                                     Binding="{Binding ModuleName}"
-                                    Width="130" />
+                                    Width="120" />
                 <DataGridTextColumn Header="符号"
                                     Binding="{Binding SymbolName}"
-                                    Width="160" />
+                                    Width="180" />
                 <DataGridTextColumn Header="命中次数"
                                     Binding="{Binding HitCount}"
-                                    Width="86" />
+                                    Width="80" />
                 <DataGridTextColumn Header="条件MISS"
                                     Binding="{Binding ConditionMissCount}"
-                                    Width="86" />
+                                    Width="80" />
                 <DataGridTextColumn Header="条件"
                                     Binding="{Binding Condition}"
-                                    Width="180" />
+                                    Width="200" />
                 <DataGridTextColumn Header="备注"
                                     Binding="{Binding Comment}"
-                                    Width="180" />
+                                    Width="*" />
             </DataGrid.Columns>
             <DataGrid.ContextMenu>
-                <ContextMenu>
+                <ContextMenu x:Name="BreakpointContextMenu">
                     <MenuItem Header="跳转到反汇编"
+                              InputGestureText="Enter"
                               Click="OnGoToBreakpointClick" />
                     <MenuItem Header="启用/禁用断点"
-                              Command="{Binding ToggleSelectedBreakpointCommand}" />
+                              InputGestureText="Space"
+                              Click="OnToggleBreakpointClick" />
+                    <MenuItem x:Name="EditConditionMenuItem"
+                              Header="编辑条件"
+                              InputGestureText="Shift+F2"
+                              Click="OnEditConditionClick" />
+                    <MenuItem x:Name="ClearConditionMenuItem"
+                              Header="清除条件"
+                              Click="OnClearConditionClick" />
                     <Separator />
                     <MenuItem Header="删除断点"
-                              Command="{Binding RemoveSelectedBreakpointCommand}" />
+                              InputGestureText="Del"
+                              Click="OnDeleteBreakpointClick" />
                     <MenuItem Header="清除全部断点"
-                              Command="{Binding ClearBreakpointsCommand}" />
+                              Click="OnClearAllBreakpointsClick" />
                 </ContextMenu>
             </DataGrid.ContextMenu>
         </DataGrid>
@@ -126,7 +142,7 @@
             <TextBlock FontSize="12"
                        FontWeight="SemiBold"
                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                       Text="MCP 断点" />
+                       Text="MCP断点" />
         </Border>
 
         <DataGrid Grid.Row="4"
@@ -137,7 +153,8 @@
                   CanUserDeleteRows="False"
                   SelectionMode="Single"
                   HeadersVisibility="Column"
-                  ColumnHeaderHeight="32"
+                  ColumnHeaderHeight="36"
+                  RowHeight="33"
                   GridLinesVisibility="Horizontal"
                   EnableRowVirtualization="True"
                   VirtualizingPanel.IsVirtualizing="True"
@@ -149,27 +166,27 @@
             <DataGrid.Columns>
                 <DataGridTextColumn Header="ID"
                                     Binding="{Binding AddressText}"
-                                    Width="54" />
+                                    Width="180" />
                 <DataGridTextColumn Header="目标"
                                     Binding="{Binding AddressText}"
-                                    Width="150" />
+                                    Width="180" />
                 <DataGridTextColumn Header="类型"
                                     Binding="{Binding KindText}"
-                                    Width="72" />
+                                    Width="110" />
                 <DataGridTextColumn Header="模式"
-                                    Width="72" />
+                                    Width="120" />
                 <DataGridTextColumn Header="条件/过滤"
                                     Binding="{Binding Condition}"
-                                    Width="180" />
+                                    Width="220" />
                 <DataGridTextColumn Header="状态"
                                     Binding="{Binding StateText}"
-                                    Width="80" />
+                                    Width="90" />
                 <DataGridTextColumn Header="命中"
                                     Binding="{Binding HitCount}"
                                     Width="70" />
                 <DataGridTextColumn Header="备注"
                                     Binding="{Binding Comment}"
-                                    Width="240" />
+                                    Width="*" />
             </DataGrid.Columns>
         </DataGrid>
     </Grid>

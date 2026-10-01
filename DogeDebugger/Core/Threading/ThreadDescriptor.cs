@@ -20,6 +20,8 @@ public sealed class ThreadDescriptor
 
     public string StartAddressText => $"0x{StartAddress:X}";
 
+    public string EntryText { get; set; } = string.Empty;
+
     public string InstructionPointerText => $"0x{InstructionPointer:X}";
 
     public string TebBaseAddressText => $"0x{TebBaseAddress:X}";
@@ -27,4 +29,6 @@ public sealed class ThreadDescriptor
     public string BasePriorityText => BasePriority.ToString();
 
     public string SuspendCountText => SuspendCount.ToString();
+
+    public string StatusText { get; set; } = string.Empty;
 }

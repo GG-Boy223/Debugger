@@ -308,11 +308,11 @@
         <Grid Grid.Row="1"
               Margin="0,10,0,0">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="2*" />
+                <ColumnDefinition Width="3.5*" />
                 <ColumnDefinition Width="12" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
-            <Border Padding="12"
+            <Border Padding="12,9,12,12"
                     CornerRadius="8"
                     BorderThickness="1"
                     BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
@@ -326,8 +326,8 @@
                                Text="批量目标（名字=十六进制偏移，每行一个）" />
                     <TextBox x:Name="BatchTargetsBox"
                              Grid.Row="1"
-                             Height="86"
-                             Margin="0,6,0,0"
+                             Height="88"
+                             Margin="0"
                              Padding="6"
                              AcceptsReturn="True"
                              VerticalScrollBarVisibility="Auto"
@@ -336,7 +336,7 @@
                 </Grid>
             </Border>
             <Border Grid.Column="2"
-                    Padding="12"
+                    Padding="12,19,12,12"
                     CornerRadius="8"
                     BorderThickness="1"
                     BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
@@ -346,103 +346,136 @@
                                Text="目标类型" />
                     <ComboBox x:Name="TargetKindCombo"
                               MinHeight="31"
-                              Margin="0,6,0,0" />
-                    <TextBlock x:Name="BatchHintText"
-                               Margin="0,8,0,0"
-                               FontSize="11"
-                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                               TextWrapping="Wrap"
-                               Text="支持函数入口、函数内部、全局数据、字符串和未知地址。" />
+                              Margin="0" />
+                    <Grid Margin="0,16,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <ui:Button x:Name="StartBatchButton"
+                                   Grid.Column="0"
+                                   Height="34"
+                                   Margin="0,0,8,0"
+                                   IsEnabled="False"
+                                   Click="OnStartBatchClick"
+                                   Content="开始批量定位" />
+                        <ui:Button x:Name="CancelTaskButton"
+                                   Grid.Column="1"
+                                   Width="82"
+                                   Height="34"
+                                   IsEnabled="False"
+                                   Click="OnCancelTaskClick"
+                                   Content="取消任务" />
+                    </Grid>
                 </StackPanel>
             </Border>
         </Grid>
 
         <Grid Grid.Row="2"
-              Margin="0,10,0,0">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-            <StackPanel Orientation="Horizontal"
-                        VerticalAlignment="Center">
-                <ProgressBar x:Name="BatchProgressBar"
-                             Width="180"
-                             Height="8"
-                             Margin="0,0,10,0"
-                             Maximum="100" />
-                <TextBlock x:Name="BatchStatusText"
+              Margin="0,13,0,0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock x:Name="BatchReadyText"
                            VerticalAlignment="Center"
                            FontSize="11"
-                           Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-            </StackPanel>
-            <ui:Button x:Name="StartBatchButton"
-                       Grid.Column="1"
-                       Margin="8,0"
-                       Padding="14,6"
-                       Appearance="Primary"
-                       Click="OnStartBatchClick"
-                       Content="开始批量定位" />
-            <ui:Button x:Name="CancelTaskButton"
-                       Grid.Column="2"
-                       Margin="0,0,8,0"
-                       Padding="14,6"
-                       IsEnabled="False"
-                       Click="OnCancelTaskClick"
-                       Content="取消任务" />
-            <TextBlock Grid.Column="3"
-                       VerticalAlignment="Center"
-                       FontSize="11"
-                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                       Text="置信度与证据交叉验证" />
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                           Text="准备就绪" />
+                <TextBlock x:Name="BatchStatusText"
+                           Grid.Column="1"
+                           Margin="10,0,0,0"
+                           VerticalAlignment="Center"
+                           FontSize="11"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                           TextTrimming="CharacterEllipsis" />
+                <TextBlock x:Name="BatchProgressText"
+                           Grid.Column="2"
+                           VerticalAlignment="Center"
+                           FontSize="11"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                           Text="0%" />
+            </Grid>
+            <Grid Grid.Row="1"
+                  Margin="0,5,0,0">
+                <ProgressBar x:Name="BatchProgressBar"
+                             Height="4"
+                             Maximum="100" />
+            </Grid>
         </Grid>
 
         <Border Grid.Row="3"
-                Margin="0,10,0,0"
+                Margin="0,14,0,0"
                 Padding="1"
                 CornerRadius="7"
                 BorderThickness="1"
                 BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
                 Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
-            <DataGrid x:Name="TargetResultsGrid"
-                      AutoGenerateColumns="False"
-                      IsReadOnly="True"
-                      CanUserAddRows="False"
-                      CanUserDeleteRows="False"
-                      SelectionMode="Single"
-                      HeadersVisibility="Column"
-                      GridLinesVisibility="Horizontal"
-                      MouseDoubleClick="OnTargetResultsMouseDoubleClick"
-                      PreviewKeyDown="OnTargetResultsPreviewKeyDown"
-                      SelectionChanged="OnTargetResultsSelectionChanged">
-                <DataGrid.Columns>
-                    <DataGridTextColumn Header="行"
-                                        Binding="{Binding RowNumber}"
-                                        Width="50" />
-                    <DataGridTextColumn Header="名称"
-                                        Binding="{Binding Name}"
-                                        Width="180" />
-                    <DataGridTextColumn Header="A 版偏移"
-                                        Binding="{Binding SourceOffsetText}"
-                                        Width="110" />
-                    <DataGridTextColumn Header="处理状态"
-                                        Binding="{Binding StateText}"
-                                        Width="100" />
-                    <DataGridTextColumn Header="B 版偏移"
-                                        Binding="{Binding EffectiveOffsetText}"
-                                        Width="110" />
-                    <DataGridTextColumn Header="置信度"
-                                        Binding="{Binding ConfidenceText}"
-                                        Width="90" />
-                    <DataGridTextColumn Header="证据数"
-                                        Binding="{Binding EvidenceCountText}"
-                                        Width="70" />
-                    <DataGridTextColumn Header="结果说明"
-                                        Binding="{Binding Explanation}"
-                                        Width="*" />
-                </DataGrid.Columns>
-            </DataGrid>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <Grid Margin="12,6,12,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock FontWeight="SemiBold"
+                               Text="批量定位结果" />
+                    <TextBlock Grid.Column="1"
+                               Margin="10,0,0,0"
+                               VerticalAlignment="Center"
+                               FontSize="11"
+                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                               Text="运行批量定位后，所有目标会集中显示在此处。" />
+                </Grid>
+                <DataGrid x:Name="TargetResultsGrid"
+                          Grid.Row="1"
+                          AutoGenerateColumns="False"
+                          IsReadOnly="True"
+                          CanUserAddRows="False"
+                          CanUserDeleteRows="False"
+                          SelectionMode="Single"
+                          HeadersVisibility="Column"
+                          GridLinesVisibility="Horizontal"
+                          MouseDoubleClick="OnTargetResultsMouseDoubleClick"
+                          PreviewKeyDown="OnTargetResultsPreviewKeyDown"
+                          SelectionChanged="OnTargetResultsSelectionChanged">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="行"
+                                            Binding="{Binding RowNumber}"
+                                            Width="50" />
+                        <DataGridTextColumn Header="名称"
+                                            Binding="{Binding Name}"
+                                            Width="180" />
+                        <DataGridTextColumn Header="A 版偏移"
+                                            Binding="{Binding SourceOffsetText}"
+                                            Width="110" />
+                        <DataGridTextColumn Header="处理状态"
+                                            Binding="{Binding StateText}"
+                                            Width="100" />
+                        <DataGridTextColumn Header="B 版偏移"
+                                            Binding="{Binding EffectiveOffsetText}"
+                                            Width="110" />
+                        <DataGridTextColumn Header="置信度"
+                                            Binding="{Binding ConfidenceText}"
+                                            Width="90" />
+                        <DataGridTextColumn Header="证据数"
+                                            Binding="{Binding EvidenceCountText}"
+                                            Width="70" />
+                        <DataGridTextColumn Header="结果说明"
+                                            Binding="{Binding Explanation}"
+                                            Width="*" />
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Grid>
         </Border>
 
         <Grid Grid.Row="4"

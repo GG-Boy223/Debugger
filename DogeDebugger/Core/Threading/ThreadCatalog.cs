@@ -46,6 +46,8 @@ public sealed class ThreadCatalog
 
                 string? name = null;
                 ulong tebBaseAddress = 0;
+                ulong startAddress = 0;
+                int priority = nativeEntry.BasePriority;
                 if (!threadHandle.IsInvalid &&
                     NativeMethods.GetThreadDescription(threadHandle.DangerousGetHandle(), out IntPtr description))
                 {
@@ -63,6 +65,17 @@ public sealed class ThreadCatalog
                 }
 
                 if (!threadHandle.IsInvalid &&
+                    NtQueryInformationThreadStartAddress(
+                        threadHandle.DangerousGetHandle(),
+                        ThreadQuerySetWin32StartAddress,
+                        out IntPtr win32StartAddress,
+                        IntPtr.Size,
+                        out _) >= 0)
+                {
+                    startAddress = unchecked((ulong)win32StartAddress.ToInt64());
+                }
+
+                if (!threadHandle.IsInvalid &&
                     NtQueryInformationThread(
                         threadHandle.DangerousGetHandle(),
                         ThreadBasicInformation,
@@ -71,14 +84,19 @@ public sealed class ThreadCatalog
                         out _) >= 0)
                 {
                     tebBaseAddress = unchecked((ulong)basicInformation.TebBaseAddress.ToInt64());
+                    if (basicInformation.Priority != 0)
+                    {
+                        priority = basicInformation.Priority;
+                    }
                 }
 
                 threads.Add(new ThreadDescriptor
                 {
                     ThreadId = nativeEntry.ThreadId,
                     ProcessId = nativeEntry.OwnerProcessId,
-                    BasePriority = nativeEntry.BasePriority,
-                    Name = name ?? $"Thread {nativeEntry.ThreadId}",
+                    BasePriority = priority,
+                    Name = name ?? string.Empty,
+                    StartAddress = startAddress,
                     TebBaseAddress = tebBaseAddress
                 });
             }
@@ -110,12 +128,21 @@ public sealed class ThreadCatalog
     }
 
     private const int ThreadBasicInformation = 0;
+    private const int ThreadQuerySetWin32StartAddress = 9;
 
     [DllImport("ntdll.dll")]
     private static extern int NtQueryInformationThread(
         IntPtr threadHandle,
         int informationClass,
         out ThreadBasicInformationData threadInformation,
+        int threadInformationLength,
+        out int returnLength);
+
+    [DllImport("ntdll.dll", EntryPoint = "NtQueryInformationThread")]
+    private static extern int NtQueryInformationThreadStartAddress(
+        IntPtr threadHandle,
+        int informationClass,
+        out IntPtr threadInformation,
         int threadInformationLength,
         out int returnLength);
 

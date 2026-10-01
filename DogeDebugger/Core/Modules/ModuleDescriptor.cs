@@ -19,11 +19,9 @@ public sealed class ModuleDescriptor
     public bool Contains(ulong address) =>
         address >= BaseAddress && address < BaseAddress + Size;
 
-    public string BaseAddressText => $"0x{BaseAddress:X}";
+    public string BaseAddressText => $"{BaseAddress:X16}";
 
-    public string EntryPointText => $"0x{EntryPoint:X}";
+    public string EntryPointText => $"{EntryPoint:X16}";
 
-    public string SizeText => Size < 1024
-        ? $"{Size:N0} B"
-        : $"{Size / 1024d:N1} KB";
+    public string SizeText => $"{Size:X}";
 }

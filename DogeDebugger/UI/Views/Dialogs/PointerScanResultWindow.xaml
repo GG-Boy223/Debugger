@@ -81,6 +81,7 @@
             </Popup>
             <Separator />
             <Button x:Name="CancelScanButton"
+                    Visibility="Collapsed"
                     Click="OnCancelScanClick"
                     Content="取消"
                     ToolTip="取消当前扫描" />

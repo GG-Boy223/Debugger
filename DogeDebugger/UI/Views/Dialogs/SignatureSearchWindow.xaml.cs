@@ -27,6 +27,7 @@ public partial class SignatureSearchWindow : Window
     private StaticAnalysisCacheDocument? _bCacheDocument;
     private ModuleDescriptor? _bCurrentModule;
     private int _runningRowCount;
+    private bool _isRunning;
 
     public SignatureSearchWindow(MainViewModel viewModel)
     {
@@ -37,8 +38,8 @@ public partial class SignatureSearchWindow : Window
         BCacheCombo.ItemsSource = _cacheOptions;
         TargetKindCombo.ItemsSource = TargetKinds;
         TargetKindCombo.SelectedIndex = 0;
-        ASourceExternalRadio.IsChecked = true;
-        BSourceCurrentProcessRadio.IsChecked = true;
+        ASourceCacheRadio.IsChecked = true;
+        BSourceCacheRadio.IsChecked = true;
         RefreshSourcePanels();
         RefreshCacheOptions();
         RefreshLiveModules();
@@ -172,6 +173,7 @@ public partial class SignatureSearchWindow : Window
             ? $"{_viewModel.TargetProcessName} · PID {_viewModel.TargetProcessId} · " +
               $"{(_viewModel.Target.Is64Bit ? "x64" : "x86")}"
             : "尚未打开进程";
+        UpdateActionState();
     }
 
     private void OnACacheSelectionChanged(
@@ -399,6 +401,7 @@ public partial class SignatureSearchWindow : Window
         Progress<CrossVersionProgress> progress = new(item =>
         {
             BatchProgressBar.Value = item.Percentage;
+            BatchProgressText.Text = $"{item.Percentage:0}%";
             BatchStatusText.Text = item.Message;
         });
         try
@@ -835,12 +838,13 @@ public partial class SignatureSearchWindow : Window
 
     private void SetRunning(bool running)
     {
-        StartBatchButton.IsEnabled = !running;
+        _isRunning = running;
         CancelTaskButton.IsEnabled = running;
         BatchProgressBar.IsIndeterminate = false;
         if (!running)
         {
             BatchProgressBar.Value = 0;
+            BatchProgressText.Text = "0%";
         }
 
         UpdateActionState();
@@ -848,6 +852,16 @@ public partial class SignatureSearchWindow : Window
 
     private void UpdateActionState()
     {
+        bool hasSource = ASourceCacheRadio.IsChecked == true
+            ? ACacheCombo.SelectedItem is SignatureCacheArtifactOption
+            : ASourceExternalRadio.IsChecked == true && _aImage is not null;
+        bool hasTarget = BSourceCacheRadio.IsChecked == true
+            ? BCacheCombo.SelectedItem is SignatureCacheArtifactOption
+            : BSourceExternalRadio.IsChecked == true
+                ? _bImage is not null
+                : BSourceCurrentProcessRadio.IsChecked == true &&
+                  BModuleCombo.SelectedItem is ModuleDescriptor;
+        StartBatchButton.IsEnabled = !_isRunning && hasSource && hasTarget;
         SignatureSearchResultRow? selected =
             TargetResultsGrid.SelectedItem as SignatureSearchResultRow;
         ExportResultsButton.IsEnabled =

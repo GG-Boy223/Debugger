@@ -50,7 +50,7 @@ public sealed class AppSettings
     public Dictionary<string, int> PanelGroupOverrides { get; set; } =
         new(StringComparer.OrdinalIgnoreCase);
 
-    public int LayoutVersion { get; set; } = 5_000_000;
+    public int LayoutVersion { get; set; } = 5_000_004;
 
     public int IgnoredLayoutVersion { get; set; }
 

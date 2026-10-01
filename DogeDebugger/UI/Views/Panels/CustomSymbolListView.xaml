@@ -12,8 +12,10 @@
                 BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
                 BorderThickness="0,0,0,1">
             <ui:Button Appearance="Secondary"
+                       Width="86"
+                       Height="25"
                        FontSize="12"
-                       Padding="8,4"
+                       Padding="7,3"
                        Command="{Binding ClearCustomSymbolsCommand}">
                 <StackPanel Orientation="Horizontal">
                     <ui:SymbolIcon Symbol="Delete24"
@@ -41,13 +43,13 @@
             <DataGrid.Columns>
                 <DataGridTextColumn Header="地址"
                                     Binding="{Binding AddressText}"
-                                    Width="150" />
+                                    Width="200" />
                 <DataGridTextColumn Header="模块"
                                     Binding="{Binding ModuleName}"
-                                    Width="150" />
+                                    Width="120" />
                 <DataGridTextColumn Header="名称"
                                     Binding="{Binding Name}"
-                                    Width="530" />
+                                    Width="*" />
             </DataGrid.Columns>
         </DataGrid>
     </Grid>

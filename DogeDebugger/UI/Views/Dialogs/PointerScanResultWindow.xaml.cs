@@ -41,6 +41,11 @@ public partial class PointerScanResultWindow : Window
 
     public ObservableCollection<PointerScanModuleFilterItem> ModuleFilters { get; }
 
+    public void BeginNewScan()
+    {
+        OnNewScanClick(this, new RoutedEventArgs());
+    }
+
     private async void OnNewScanClick(object sender, RoutedEventArgs eventArgs)
     {
         PointerScanOptions initialOptions = CreateInitialOptions();
@@ -605,6 +610,9 @@ public partial class PointerScanResultWindow : Window
     private void SetScanning(bool scanning, string? message)
     {
         _isScanning = scanning;
+        CancelScanButton.Visibility = scanning
+            ? Visibility.Visible
+            : Visibility.Collapsed;
         ScanProgressBar.IsIndeterminate = scanning;
         ScanProgressBar.Value = 0;
         if (!string.IsNullOrWhiteSpace(message))
@@ -623,7 +631,7 @@ public partial class PointerScanResultWindow : Window
     {
         NewScanButton.IsEnabled = !_isScanning;
         RescanButton.IsEnabled = !_isScanning && _result is not null;
-        SaveButton.IsEnabled = !_isScanning && _result is not null;
+        SaveButton.IsEnabled = !_isScanning;
         LoadButton.IsEnabled = !_isScanning;
         CancelScanButton.IsEnabled = _isScanning;
         PreviousPageButton.IsEnabled = !_isScanning && _currentPage > 1;

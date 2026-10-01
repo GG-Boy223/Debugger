@@ -26,9 +26,40 @@ public sealed class InstructionSnapshot
 
     public IReadOnlyList<byte> FixedByteMask { get; init; } = [];
 
-    public string AddressText => $"0x{Address:X}";
+    public string DisplayAddressText { get; set; } = string.Empty;
 
-    public string BytesText => string.Join(' ', Bytes.Select(static value => value.ToString("X2")));
+    public string DisplayBytesText { get; init; } = string.Empty;
+
+    public string Comment { get; set; } = string.Empty;
+
+    public string CustomSymbolName { get; set; } = string.Empty;
+
+    public string CommentText =>
+        string.IsNullOrWhiteSpace(Comment)
+            ? string.Empty
+            : $"  ; {Comment}";
+
+    public string ArrowText { get; init; } = string.Empty;
+
+    public bool IsInstructionPointer { get; set; }
+
+    public bool IsBreakpoint { get; set; }
+
+    public string MarkerText => IsBreakpoint
+        ? "●"
+        : IsInstructionPointer
+            ? "▶"
+            : ArrowText;
+
+    public string AddressText =>
+        string.IsNullOrWhiteSpace(DisplayAddressText)
+            ? $"{Address:X16}"
+            : DisplayAddressText;
+
+    public string BytesText =>
+        string.IsNullOrWhiteSpace(DisplayBytesText)
+            ? string.Join(' ', Bytes.Select(static value => value.ToString("X2")))
+            : DisplayBytesText;
 
     public string OperandText => string.IsNullOrWhiteSpace(Operands)
         ? Text
@@ -41,6 +72,11 @@ public sealed class InstructionSnapshot
     public bool IsReturn =>
         string.Equals(FlowControl, "Return", StringComparison.Ordinal) ||
         string.Equals(FlowControl, "IndirectBranch", StringComparison.Ordinal);
+
+    public string DisplayInstructionText =>
+        string.IsNullOrWhiteSpace(CustomSymbolName)
+            ? Text
+            : $"{CustomSymbolName}  ; {Text}";
 
     public override string ToString() => $"{Address:X16}  {Text}";
 }

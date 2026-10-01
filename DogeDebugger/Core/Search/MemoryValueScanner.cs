@@ -10,6 +10,16 @@ public sealed class MemoryValueScanner
 {
     private const int ChunkSize = 1024 * 1024;
 
+    private static readonly MemoryValueKind[] AllNumericKinds =
+    [
+        MemoryValueKind.Byte,
+        MemoryValueKind.Int16,
+        MemoryValueKind.Int32,
+        MemoryValueKind.Int64,
+        MemoryValueKind.Single,
+        MemoryValueKind.Double
+    ];
+
     private readonly MemoryRegionCatalog _regions;
 
     public MemoryValueScanner(MemoryRegionCatalog regions)
@@ -25,6 +35,11 @@ public sealed class MemoryValueScanner
         ArgumentNullException.ThrowIfNull(process);
         ArgumentNullException.ThrowIfNull(options);
         ValidateOptions(options);
+
+        if (options.Kind == MemoryValueKind.AllTypes)
+        {
+            return InitialAllTypesScan(process, options, cancellationToken);
+        }
 
         if (options.Kind == MemoryValueKind.ByteArray)
         {
@@ -123,8 +138,14 @@ public sealed class MemoryValueScanner
                     matches.Add(new MemoryValueMatch
                     {
                         Address = cursor + (ulong)offset,
+                        Kind = options.Kind,
                         PreviousBytes = currentBytes,
                         CurrentBytes = currentBytes,
+                        PreviousValueText = FormatValue(
+                            currentBytes,
+                            options.Kind,
+                            options.IgnoreCase,
+                            options.TextEncoding),
                         DisplayValue = FormatValue(
                             currentBytes,
                             options.Kind,
@@ -173,6 +194,15 @@ public sealed class MemoryValueScanner
         ArgumentNullException.ThrowIfNull(previousMatches);
         ArgumentNullException.ThrowIfNull(options);
         ValidateOptions(options);
+
+        if (options.Kind == MemoryValueKind.AllTypes)
+        {
+            return NextAllTypesScan(
+                process,
+                previousMatches,
+                options,
+                cancellationToken);
+        }
 
         if (options.Kind == MemoryValueKind.ByteArray)
         {
@@ -282,8 +312,14 @@ public sealed class MemoryValueScanner
             matches.Add(new MemoryValueMatch
             {
                 Address = previous.Address,
+                Kind = options.Kind,
                 PreviousBytes = previous.CurrentBytes,
                 CurrentBytes = currentBytes,
+                PreviousValueText = FormatValue(
+                    previous.CurrentBytes,
+                    options.Kind,
+                    options.IgnoreCase,
+                    options.TextEncoding),
                 DisplayValue = FormatValue(
                     currentBytes,
                     options.Kind,
@@ -334,6 +370,33 @@ public sealed class MemoryValueScanner
     private static bool ShouldScan(MemoryRegionInfo region, MemoryValueScanOptions options)
     {
         if (region.State != NativeMethods.MemCommit)
+        {
+            return false;
+        }
+
+        if (!string.IsNullOrWhiteSpace(options.ModuleName) &&
+            !string.Equals(
+                region.ModuleName,
+                options.ModuleName,
+                StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        if (options.RequireWritable is bool requireWritable &&
+            region.IsWritable != requireWritable)
+        {
+            return false;
+        }
+
+        if (options.RequireExecutable is bool requireExecutable &&
+            region.IsExecutable != requireExecutable)
+        {
+            return false;
+        }
+
+        if (options.RequireCopyOnWrite is bool requireCopyOnWrite &&
+            region.IsCopyOnWrite != requireCopyOnWrite)
         {
             return false;
         }
@@ -460,8 +523,10 @@ public sealed class MemoryValueScanner
                     matches.Add(new MemoryValueMatch
                     {
                         Address = cursor + (ulong)offset,
+                        Kind = MemoryValueKind.ByteArray,
                         PreviousBytes = currentBytes,
                         CurrentBytes = currentBytes,
+                        PreviousValueText = pattern.DisplayText,
                         DisplayValue = pattern.DisplayText
                     });
                     if (matches.Count >= options.MaximumResults)
@@ -526,8 +591,10 @@ public sealed class MemoryValueScanner
             matches.Add(new MemoryValueMatch
             {
                 Address = previous.Address,
+                Kind = MemoryValueKind.ByteArray,
                 PreviousBytes = previous.CurrentBytes,
                 CurrentBytes = currentBytes,
+                PreviousValueText = pattern.DisplayText,
                 DisplayValue = pattern.DisplayText
             });
         }
@@ -535,6 +602,312 @@ public sealed class MemoryValueScanner
         return new MemoryValueScanResult
         {
             ScannedBytes = (ulong)(previousMatches.Count * pattern.Length),
+            Matches = matches
+        };
+    }
+
+    private MemoryValueScanResult InitialAllTypesScan(
+        ITargetProcess process,
+        MemoryValueScanOptions options,
+        CancellationToken cancellationToken)
+    {
+        Dictionary<MemoryValueKind, MemoryValueSample?> expected = [];
+        Dictionary<MemoryValueKind, MemoryValueSample?> second = [];
+        foreach (MemoryValueKind kind in AllNumericKinds)
+        {
+            if (RequiresValue(options.Comparison))
+            {
+                if (!MemoryValueSample.TryParse(
+                        options.Value,
+                        kind,
+                        options.IgnoreCase,
+                        options.TextEncoding,
+                        out MemoryValueSample? expectedSample) ||
+                    expectedSample is null)
+                {
+                    expected[kind] = null;
+                }
+                else
+                {
+                    expected[kind] = expectedSample;
+                }
+            }
+
+            if (options.Comparison == MemoryValueComparison.Between)
+            {
+                if (!MemoryValueSample.TryParse(
+                        options.SecondValue ?? string.Empty,
+                        kind,
+                        options.IgnoreCase,
+                        options.TextEncoding,
+                        out MemoryValueSample? secondSample) ||
+                    secondSample is null)
+                {
+                    second[kind] = null;
+                }
+                else
+                {
+                    second[kind] = secondSample;
+                }
+            }
+        }
+
+        if (RequiresValue(options.Comparison) &&
+            expected.Values.All(static value => value is null))
+        {
+            throw new FormatException(
+                $"Could not parse '{options.Value}' as any supported value type.");
+        }
+
+        List<MemoryValueMatch> matches = [];
+        ulong scanned = 0;
+        const int maximumValueSize = sizeof(double);
+        byte[] buffer = new byte[ChunkSize + maximumValueSize - 1];
+
+        foreach (MemoryRegionInfo region in _regions.Enumerate(process))
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (!ShouldScan(region, options) || !region.IsReadable)
+            {
+                continue;
+            }
+
+            ulong start = AlignUp(
+                Math.Max(region.BaseAddress, options.StartAddress),
+                options.Alignment);
+            ulong end = Math.Min(region.BaseAddress + region.Size, options.EndAddress);
+            if (end <= start)
+            {
+                continue;
+            }
+
+            ulong cursor = start;
+            while (cursor < end)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                int requested = checked((int)Math.Min((ulong)ChunkSize, end - cursor));
+                int read = process.ReadBytesPartial(
+                    cursor,
+                    buffer.AsSpan(0, requested + maximumValueSize - 1));
+                if (read < 1)
+                {
+                    cursor += (ulong)Math.Max(requested, 1);
+                    continue;
+                }
+
+                scanned += (ulong)read;
+                int lastOffset = Math.Max(0, read - 1);
+                for (int offset = 0; offset <= lastOffset; offset += options.Alignment)
+                {
+                    foreach (MemoryValueKind kind in AllNumericKinds)
+                    {
+                        int valueSize = MemoryValueSample.SizeOf(kind);
+                        MemoryValueSample? expectedSample =
+                            expected.GetValueOrDefault(kind);
+                        MemoryValueSample? secondSample =
+                            second.GetValueOrDefault(kind);
+                        if ((RequiresValue(options.Comparison) &&
+                             expectedSample is null) ||
+                            (options.Comparison == MemoryValueComparison.Between &&
+                             secondSample is null))
+                        {
+                            continue;
+                        }
+
+                        if (offset + valueSize > read ||
+                            !MemoryValueSample.TryCreate(
+                                kind,
+                                buffer.AsSpan(offset, valueSize),
+                                options.IgnoreCase,
+                                options.TextEncoding,
+                                out MemoryValueSample? candidate) ||
+                            candidate is null ||
+                            !MatchesInitial(
+                                candidate,
+                                expectedSample,
+                                secondSample,
+                                options.Comparison))
+                        {
+                            continue;
+                        }
+
+                        byte[] currentBytes = candidate.Bytes;
+                        matches.Add(new MemoryValueMatch
+                        {
+                            Address = cursor + (ulong)offset,
+                            Kind = kind,
+                            PreviousBytes = currentBytes,
+                            CurrentBytes = currentBytes,
+                            PreviousValueText = FormatValue(
+                                currentBytes,
+                                kind,
+                                options.IgnoreCase,
+                                options.TextEncoding),
+                            DisplayValue = FormatValue(
+                                currentBytes,
+                                kind,
+                                options.IgnoreCase,
+                                options.TextEncoding)
+                        });
+
+                        if (matches.Count >= options.MaximumResults)
+                        {
+                            return new MemoryValueScanResult
+                            {
+                                Truncated = true,
+                                ScannedBytes = scanned,
+                                Matches = matches
+                            };
+                        }
+                    }
+                }
+
+                if (read < requested)
+                {
+                    cursor += (ulong)Math.Max(read, 1);
+                }
+                else
+                {
+                    cursor += (ulong)Math.Max(1, requested - maximumValueSize + 1);
+                }
+            }
+        }
+
+        return new MemoryValueScanResult
+        {
+            ScannedBytes = scanned,
+            Matches = matches
+        };
+    }
+
+    private static MemoryValueScanResult NextAllTypesScan(
+        ITargetProcess process,
+        IReadOnlyList<MemoryValueMatch> previousMatches,
+        MemoryValueScanOptions options,
+        CancellationToken cancellationToken)
+    {
+        List<MemoryValueMatch> matches = [];
+        ulong scanned = 0;
+
+        foreach (MemoryValueMatch previous in previousMatches)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            MemoryValueKind kind = previous.Kind == MemoryValueKind.AllTypes
+                ? MemoryValueKind.Int32
+                : previous.Kind;
+            int valueSize = MemoryValueSample.SizeOf(kind);
+            if (valueSize <= 0)
+            {
+                continue;
+            }
+
+            if (!MemoryValueSample.TryCreate(
+                    kind,
+                    previous.CurrentBytes,
+                    options.IgnoreCase,
+                    options.TextEncoding,
+                    out MemoryValueSample? previousValue) ||
+                previousValue is null)
+            {
+                continue;
+            }
+
+            MemoryValueSample? expected = null;
+            if (RequiresValue(options.Comparison) &&
+                (!MemoryValueSample.TryParse(
+                    options.Value,
+                    kind,
+                    options.IgnoreCase,
+                    options.TextEncoding,
+                    out expected) ||
+                 expected is null))
+            {
+                continue;
+            }
+
+            MemoryValueSample? second = null;
+            if (options.Comparison == MemoryValueComparison.Between &&
+                (!MemoryValueSample.TryParse(
+                    options.SecondValue ?? string.Empty,
+                    kind,
+                    options.IgnoreCase,
+                    options.TextEncoding,
+                    out second) ||
+                 second is null))
+            {
+                continue;
+            }
+
+            byte[] currentBytes = process.ReadBytes(previous.Address, valueSize);
+            scanned += (ulong)Math.Max(valueSize, 1);
+            if (currentBytes.Length != valueSize ||
+                !MemoryValueSample.TryCreate(
+                    kind,
+                    currentBytes,
+                    options.IgnoreCase,
+                    options.TextEncoding,
+                    out MemoryValueSample? currentValue) ||
+                currentValue is null)
+            {
+                continue;
+            }
+
+            bool matched = options.Comparison switch
+            {
+                MemoryValueComparison.UnknownInitialValue => true,
+                MemoryValueComparison.Changed => !previousValue.Matches(
+                    currentValue,
+                    MemoryValueComparison.Unchanged,
+                    second),
+                MemoryValueComparison.Unchanged => previousValue.Matches(
+                    currentValue,
+                    MemoryValueComparison.Unchanged,
+                    second),
+                MemoryValueComparison.Increased => currentValue.Matches(
+                    previousValue,
+                    MemoryValueComparison.GreaterThan,
+                    second),
+                MemoryValueComparison.Decreased => currentValue.Matches(
+                    previousValue,
+                    MemoryValueComparison.LessThan,
+                    second),
+                MemoryValueComparison.IncreasedBy => expected!.MatchesDifference(
+                    previousValue,
+                    currentValue,
+                    decreasing: false),
+                MemoryValueComparison.DecreasedBy => expected!.MatchesDifference(
+                    previousValue,
+                    currentValue,
+                    decreasing: true),
+                _ => expected!.Matches(currentValue, options.Comparison, second)
+            };
+            if (!matched)
+            {
+                continue;
+            }
+
+            matches.Add(new MemoryValueMatch
+            {
+                Address = previous.Address,
+                Kind = kind,
+                PreviousBytes = previous.CurrentBytes,
+                CurrentBytes = currentBytes,
+                PreviousValueText = FormatValue(
+                    previous.CurrentBytes,
+                    kind,
+                    options.IgnoreCase,
+                    options.TextEncoding),
+                DisplayValue = FormatValue(
+                    currentBytes,
+                    kind,
+                    options.IgnoreCase,
+                    options.TextEncoding)
+            });
+        }
+
+        return new MemoryValueScanResult
+        {
+            ScannedBytes = scanned,
             Matches = matches
         };
     }

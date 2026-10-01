@@ -101,6 +101,8 @@
                                Text="目标:" />
                     <TextBox x:Name="TargetBox"
                              Grid.Column="1"
+                             Height="31"
+                             VerticalAlignment="Center"
                              FontFamily="Cascadia Code, Consolas, monospace"
                              FontSize="12"
                              Text="{Binding TargetInput, UpdateSourceTrigger=PropertyChanged}"
@@ -144,7 +146,7 @@
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
                     <Border Grid.Row="0"
-                            Padding="6,4"
+                            Padding="6,4,6,4"
                             BorderThickness="0,0,0,1"
                             BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}">
                         <DockPanel>
@@ -155,12 +157,14 @@
                                        FontWeight="SemiBold"
                                        Text="函数列表" />
                             <StackPanel DockPanel.Dock="Right"
+                                        Margin="4,0,-4,0"
                                         HorizontalAlignment="Right"
                                         Orientation="Horizontal">
                                 <TextBlock Style="{StaticResource SectionLabel}"
                                            Text="过滤:" />
                                 <TextBox x:Name="FunctionFilterBox"
                                          Width="160"
+                                         Height="30"
                                          FontFamily="Cascadia Code, Consolas, monospace"
                                          FontSize="11"
                                          Text="{Binding FunctionFilter, UpdateSourceTrigger=PropertyChanged}" />
@@ -199,7 +203,7 @@
                         </DataGrid.ContextMenu>
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="地址"
-                                                Binding="{Binding StartRvaHex}"
+                                                Binding="{Binding StartVaHex}"
                                                 Width="140" />
                             <DataGridTextColumn Header="名称"
                                                 Binding="{Binding DisplayName}"
@@ -239,9 +243,8 @@
                                        Text="调用方 (引用此函数的位置)" />
                             <TextBlock DockPanel.Dock="Right"
                                        HorizontalAlignment="Right"
-                                       Style="{StaticResource SectionLabel}">
-                                共 <Run Text="{Binding CurrentReferences.Count, Mode=OneWay}" /> 条
-                            </TextBlock>
+                                       Style="{StaticResource SectionLabel}"
+                                       Text="{Binding CurrentReferences.Count, Mode=OneWay, StringFormat='共  {0}  条'}" />
                             <Border />
                         </DockPanel>
                     </Border>
@@ -326,14 +329,32 @@
                     BorderThickness="0,1,0,0"
                     BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}">
                 <DockPanel>
-                    <TextBlock DockPanel.Dock="Left"
-                               FontSize="11"
-                               Foreground="{DynamicResource TextFillColorSecondaryBrush}">
-                        函数: <Run FontWeight="SemiBold" Text="{Binding TotalFunctions}" />
-                        显示: <Run FontWeight="SemiBold"
+                    <StackPanel DockPanel.Dock="Left"
+                                Orientation="Horizontal">
+                        <TextBlock FontSize="11"
+                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                   Text="函数:" />
+                        <TextBlock Margin="4,0,0,0"
+                                   FontSize="11"
+                                   FontWeight="SemiBold"
+                                   Text="{Binding TotalFunctions}" />
+                        <TextBlock Margin="12,0,0,0"
+                                   FontSize="11"
+                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                   Text="显示:" />
+                        <TextBlock Margin="4,0,0,0"
+                                   FontSize="11"
+                                   FontWeight="SemiBold"
                                    Text="{Binding FilteredFunctions.Count, Mode=OneWay}" />
-                        交叉引用: <Run FontWeight="SemiBold" Text="{Binding TotalXrefs}" />
-                    </TextBlock>
+                        <TextBlock Margin="12,0,0,0"
+                                   FontSize="11"
+                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                   Text="交叉引用:" />
+                        <TextBlock Margin="4,0,0,0"
+                                   FontSize="11"
+                                   FontWeight="SemiBold"
+                                   Text="{Binding TotalXrefs}" />
+                    </StackPanel>
                     <TextBlock DockPanel.Dock="Right"
                                HorizontalAlignment="Right"
                                FontFamily="Cascadia Code, Consolas, monospace"
@@ -362,6 +383,7 @@
                 </Style>
             </Border.Style>
             <StackPanel MaxWidth="480"
+                        Margin="0,4,0,0"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center">
                 <ui:SymbolIcon Margin="0,0,0,8"
@@ -390,13 +412,16 @@
                            TextAlignment="Center"
                            TextWrapping="Wrap" />
                 <ui:Button HorizontalAlignment="Center"
-                           Padding="14,6"
+                           Width="158"
+                           Height="29"
+                           Padding="0"
                            Appearance="Primary"
                            Command="{Binding AnalyzeModuleCommand}">
                     <ui:Button.Icon>
                         <ui:SymbolIcon Symbol="Play24" />
                     </ui:Button.Icon>
-                    <TextBlock Text="选择模块并开始分析" />
+                    <TextBlock FontSize="11"
+                               Text="选择模块并开始分析" />
                 </ui:Button>
             </StackPanel>
         </Border>

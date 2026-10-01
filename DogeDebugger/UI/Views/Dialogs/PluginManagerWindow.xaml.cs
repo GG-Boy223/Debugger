@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using DogeDebugger.Core.Settings;
@@ -84,6 +85,16 @@ public partial class PluginManagerWindow : FluentWindow
     }
 
     private void OnRefreshClick(object sender, RoutedEventArgs eventArgs) => RefreshRows();
+
+    private void OnOpenDirectoryClick(object sender, RoutedEventArgs eventArgs)
+    {
+        Directory.CreateDirectory(_pluginDirectory);
+        Process.Start(new ProcessStartInfo
+        {
+            FileName = _pluginDirectory,
+            UseShellExecute = true
+        });
+    }
 
     private async void OnLoadExternalClick(object sender, RoutedEventArgs eventArgs) =>
         await LoadExternalPluginAsync();
@@ -233,7 +244,17 @@ public partial class PluginManagerWindow : FluentWindow
             });
         }
 
-        SummaryText.Text = $"发现 {_rows.Count} 个插件，已加载 {_runtime.Plugins.Count} 个。";
+        int enabledCount = _rows.Count(static row => row.IsEnabled);
+        int errorCount = _rows.Count(static row =>
+            !string.IsNullOrWhiteSpace(row.Error));
+        SummaryText.Text =
+            $"共 {_rows.Count} 个插件，{enabledCount} 个已启用，{errorCount} 个有错误";
+        EmptyStateText.Visibility = _rows.Count == 0
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+        PluginContent.Visibility = _rows.Count == 0
+            ? Visibility.Collapsed
+            : Visibility.Visible;
         if (!string.IsNullOrWhiteSpace(selectedId))
         {
             SelectRow(selectedId);

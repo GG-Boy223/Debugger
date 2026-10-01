@@ -82,8 +82,7 @@ public partial class CrossRefPanelViewModel : ObservableObject
     private string _targetInput = string.Empty;
 
     [ObservableProperty]
-    private string _targetResolvedText =
-        "输入地址 / 模块+偏移 / 符号 / 寄存器(RIP) 然后按 Enter 或点击定位";
+    private string _targetResolvedText = "请先分析一个模块";
 
     [ObservableProperty]
     private ObservableCollection<XrefDisplayItem> _currentReferences = [];
@@ -118,6 +117,27 @@ public partial class CrossRefPanelViewModel : ObservableObject
             return;
         }
 
+        await AnalyzeModuleCoreAsync(module, targetAddress: null).ConfigureAwait(true);
+    }
+
+    public async Task<bool> AnalyzeModuleAtAddressAsync(
+        ModuleDescriptor module,
+        ulong targetAddress)
+    {
+        ArgumentNullException.ThrowIfNull(module);
+        if (!_session.Target.IsOpen || IsScanning)
+        {
+            return false;
+        }
+
+        return await AnalyzeModuleCoreAsync(module, targetAddress)
+            .ConfigureAwait(true);
+    }
+
+    private async Task<bool> AnalyzeModuleCoreAsync(
+        ModuleDescriptor module,
+        ulong? targetAddress)
+    {
         _scanCancellation?.Dispose();
         _scanCancellation = new CancellationTokenSource();
         CancellationToken cancellationToken = _scanCancellation.Token;
@@ -142,15 +162,23 @@ public partial class CrossRefPanelViewModel : ObservableObject
 
             cancellationToken.ThrowIfCancellationRequested();
             ApplyDatabase(module, database);
+            if (targetAddress is { } address)
+            {
+                SelectAddress(module, address);
+            }
+
+            return true;
         }
         catch (OperationCanceledException)
         {
             ProgressMessage = "已取消分析";
+            return false;
         }
         catch (Exception exception)
         {
             ProgressMessage = "分析失败";
             ShowError?.Invoke("交叉引用分析失败", exception.Message);
+            return false;
         }
         finally
         {
@@ -158,6 +186,28 @@ public partial class CrossRefPanelViewModel : ObservableObject
             AnalyzeModuleCommand.NotifyCanExecuteChanged();
             StopScanCommand.NotifyCanExecuteChanged();
         }
+    }
+
+    private void SelectAddress(ModuleDescriptor module, ulong address)
+    {
+        if (_database is null ||
+            address < module.BaseAddress ||
+            address >= module.BaseAddress + module.Size)
+        {
+            return;
+        }
+
+        uint rva = checked((uint)(address - module.BaseAddress));
+        FunctionEntry? function = _database.FindFunctionContaining(rva) ??
+            _database.FindFunctionAt(rva);
+        if (function is null)
+        {
+            RefreshReferencesForRva(rva, $"sub_{address:X}");
+            return;
+        }
+
+        FunctionEntry entry = function.Value;
+        SelectFunction(entry.StartRva, entry.DisplayName);
     }
 
     private bool CanAnalyzeModule() => !IsScanning;
@@ -318,12 +368,12 @@ public partial class CrossRefPanelViewModel : ObservableObject
         HasDatabase = true;
         TotalFunctions = database.TotalFunctions;
         TotalXrefs = database.TotalXrefs;
-        AnalyzedModuleText =
-            $"{module.Name}  @ 0x{module.BaseAddress:X}  ({module.SizeText})";
+        AnalyzedModuleText = $"{module.Name}  (0x{module.BaseAddress:X})";
         DatabaseStatsText =
-            $"{database.AnalysisDuration.TotalSeconds:F2}s  |  " +
-            $"{database.Bitness}-bit  |  {database.TotalXrefs:N0} xrefs";
-        TargetResolvedText = "选择左侧函数或在上方输入地址以查看调用方";
+            $"函数: {database.TotalFunctions}  |  " +
+            $"交叉引用: {database.TotalXrefs}  |  " +
+            $"用时: {database.AnalysisDuration.TotalSeconds:F1}s";
+        TargetResolvedText = "输入地址或双击左侧函数以查看调用方";
         FunctionFilter = string.Empty;
         RebuildFilteredFunctions();
         SelectedFunction = null;
@@ -344,8 +394,7 @@ public partial class CrossRefPanelViewModel : ObservableObject
         ProgressMessage = string.Empty;
         AnalyzedModuleText = "尚未分析任何模块";
         DatabaseStatsText = string.Empty;
-        TargetResolvedText =
-            "输入地址 / 模块+偏移 / 符号 / 寄存器(RIP) 然后按 Enter 或点击定位";
+        TargetResolvedText = "请先分析一个模块";
     }
 
     private void RebuildFilteredFunctions()

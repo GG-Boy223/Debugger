@@ -135,9 +135,8 @@
             <TextBlock Grid.Column="1"
                        HorizontalAlignment="Center"
                        VerticalAlignment="Center"
-                       Foreground="{DynamicResource TextFillColorSecondaryBrush}">
-                <Run Text="已选择 " /><Run Text="{Binding SelectedCount, Mode=OneWay}" /><Run Text=" 个文件" />
-            </TextBlock>
+                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                       Text="{Binding SelectedCount, Mode=OneWay, StringFormat='已选 {0} 项'}" />
             <ui:Button Grid.Column="2"
                        Appearance="Danger"
                        Padding="12,4"

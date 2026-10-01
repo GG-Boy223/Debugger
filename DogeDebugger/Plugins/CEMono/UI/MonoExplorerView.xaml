@@ -2,9 +2,10 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
-             FontFamily="Cascadia Code, Consolas, monospace"
+             FontFamily="{DynamicResource AppUiFontFamily}"
              FontSize="12">
     <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
         <Style x:Key="ExpandToggle"
                TargetType="ToggleButton">
             <Setter Property="Width" Value="16" />
@@ -50,16 +51,18 @@
         </Grid.RowDefinitions>
 
         <Border Grid.Row="0"
-                Padding="4,3"
+                Padding="10,4"
                 BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
                 BorderThickness="0,0,0,1">
             <DockPanel>
                 <StackPanel DockPanel.Dock="Left"
                             Orientation="Horizontal">
                     <ui:Button Appearance="Secondary"
+                               Width="91"
+                               Height="22"
                                FontSize="11"
-                               Padding="9,3"
-                               Margin="0,0,3,0"
+                               Padding="8,2"
+                               Margin="0,0,4,0"
                                Command="{Binding InjectMonoCommand}">
                         <StackPanel Orientation="Horizontal">
                             <ui:SymbolIcon Symbol="PlugConnected24"
@@ -68,15 +71,19 @@
                         </StackPanel>
                     </ui:Button>
                     <ui:Button Appearance="Secondary"
+                               Width="59"
+                               Height="22"
                                FontSize="11"
-                               Padding="9,3"
-                               Margin="0,0,3,0"
+                               Padding="8,2"
+                               Margin="0,0,4,0"
                                Command="{Binding DisconnectCommand}"
                                Content="断开" />
                     <ui:Button Appearance="Secondary"
+                               Width="59"
+                               Height="22"
                                FontSize="11"
-                               Padding="9,3"
-                               Margin="0,0,3,0"
+                               Padding="8,2"
+                               Margin="0,0,4,0"
                                Command="{Binding RefreshTreeCommand}">
                         <StackPanel Orientation="Horizontal">
                             <ui:SymbolIcon Symbol="ArrowSync24"
@@ -85,9 +92,11 @@
                         </StackPanel>
                     </ui:Button>
                     <ui:Button Appearance="Secondary"
+                               Width="92"
+                               Height="22"
                                FontSize="11"
-                               Padding="9,3"
-                               Margin="0,0,3,0"
+                               Padding="8,2"
+                               Margin="0,0,4,0"
                                Command="{Binding ExportSelectedImageCommand}">
                         <StackPanel Orientation="Horizontal">
                             <ui:SymbolIcon Symbol="DocumentArrowDown24"
@@ -96,8 +105,10 @@
                         </StackPanel>
                     </ui:Button>
                     <ui:Button Appearance="Secondary"
+                               Width="114"
+                               Height="22"
                                FontSize="11"
-                               Padding="9,3"
+                               Padding="8,2"
                                Command="{Binding ApplyAssemblySymbolsCommand}">
                         <StackPanel Orientation="Horizontal">
                             <ui:SymbolIcon Symbol="Code24"
@@ -112,6 +123,7 @@
 
         <ProgressBar Grid.Row="1"
                      Height="3"
+                     Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}"
                      Minimum="0"
                      Maximum="1"
                      Value="{Binding Progress}" />
@@ -169,7 +181,7 @@
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
-                    <RowDefinition Height="70" />
+                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
@@ -192,84 +204,116 @@
                            TextWrapping="Wrap"
                            Text="{Binding ClassInheritanceChain}" />
 
-                <Border Grid.Row="3"
-                        Padding="4,3"
-                        BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
-                        BorderThickness="0,1,0,1">
-                    <TextBlock FontWeight="SemiBold"
-                               Text="静态字段" />
-                </Border>
-                <DataGrid Grid.Row="4"
-                          ItemsSource="{Binding StaticFields}"
-                          AutoGenerateColumns="False"
-                          IsReadOnly="True"
-                          HeadersVisibility="Column"
-                          ColumnHeaderHeight="32"
-                          GridLinesVisibility="Horizontal"
-                          BorderThickness="0"
-                          Background="Transparent">
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Header="名称"
-                                            Binding="{Binding Name}"
-                                            Width="138" />
-                        <DataGridTextColumn Header="类型"
-                                            Binding="{Binding TypeName}"
-                                            Width="138" />
-                        <DataGridTextColumn Header="地址"
-                                            Binding="{Binding Address}"
-                                            Width="120" />
-                        <DataGridTextColumn Header="值"
-                                            Binding="{Binding Value}"
-                                            Width="*" />
-                    </DataGrid.Columns>
-                </DataGrid>
+                <StackPanel Grid.Row="3">
+                    <Border Padding="4,3"
+                            BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                            BorderThickness="0,1,0,1">
+                        <TextBlock FontWeight="SemiBold"
+                                   Text="静态字段" />
+                    </Border>
+                    <DataGrid ItemsSource="{Binding StaticFields}"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              HeadersVisibility="Column"
+                              ColumnHeaderHeight="32"
+                              GridLinesVisibility="Horizontal"
+                              BorderThickness="0"
+                              Background="Transparent">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="名称"
+                                                Binding="{Binding Name}"
+                                                Width="180" />
+                            <DataGridTextColumn Header="类型"
+                                                Binding="{Binding TypeName}"
+                                                Width="200" />
+                            <DataGridTextColumn Header="地址"
+                                                Binding="{Binding Address}"
+                                                Width="120" />
+                            <DataGridTextColumn Header="值"
+                                                Binding="{Binding Value}"
+                                                Width="*" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </StackPanel>
 
-                <Border Grid.Row="5"
-                        Padding="4,3"
-                        BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
-                        BorderThickness="0,1,0,1">
-                    <Grid>
-                        <TextBlock VerticalAlignment="Center"
-                                   FontWeight="SemiBold"
-                                   Text="字段" />
-                        <StackPanel HorizontalAlignment="Right"
-                                    Orientation="Horizontal">
-                            <TextBlock Margin="0,0,6,0"
-                                       VerticalAlignment="Center"
-                                       Text="地址" />
-                            <ComboBox Width="180"
-                                      Height="28"
-                                      ItemsSource="{Binding InstanceAddresses}"
-                                      SelectedItem="{Binding SelectedInstanceAddress}" />
-                            <ui:Button Margin="4,0,0,0"
-                                       Padding="8,3"
-                                       Command="{Binding LookupInstancesCommand}"
-                                       Content="搜索实例" />
-                        </StackPanel>
-                    </Grid>
-                </Border>
+                <StackPanel Grid.Row="4">
+                    <Border Padding="4,3"
+                            BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                            BorderThickness="0,1,0,1">
+                        <Grid>
+                            <TextBlock VerticalAlignment="Center"
+                                       FontWeight="SemiBold"
+                                       Text="字段" />
+                            <StackPanel HorizontalAlignment="Right"
+                                        Orientation="Horizontal">
+                                <TextBlock Margin="0,0,6,0"
+                                           VerticalAlignment="Center"
+                                           Text="地址" />
+                                <ComboBox Width="774"
+                                          Height="31"
+                                          ItemsSource="{Binding InstanceAddresses}"
+                                          SelectedItem="{Binding SelectedInstanceAddress}" />
+                                <ui:Button Width="62"
+                                           Height="22"
+                                           Margin="4,0,0,0"
+                                           Padding="6,2"
+                                           Command="{Binding LookupInstancesCommand}"
+                                           Content="搜索实例" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                    <DataGrid x:Name="FieldsGrid"
+                              ItemsSource="{Binding Fields}"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              HeadersVisibility="Column"
+                              ColumnHeaderHeight="32"
+                              GridLinesVisibility="Horizontal"
+                              BorderThickness="0"
+                              Background="Transparent">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="偏移"
+                                                Binding="{Binding OffsetText}"
+                                                Width="70" />
+                            <DataGridTextColumn Header="名称"
+                                                Binding="{Binding Name}"
+                                                Width="180" />
+                            <DataGridTextColumn Header="类型"
+                                                Binding="{Binding TypeName}"
+                                                Width="*" />
+                            <DataGridTextColumn Header="值"
+                                                Binding="{Binding Value}"
+                                                Width="180" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </StackPanel>
 
-                <DataGrid Grid.Row="6"
-                          ItemsSource="{Binding Fields}"
-                          AutoGenerateColumns="False"
-                          IsReadOnly="True"
-                          HeadersVisibility="Column"
-                          ColumnHeaderHeight="32"
-                          GridLinesVisibility="Horizontal"
-                          BorderThickness="0"
-                          Background="Transparent">
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Header="偏移"
-                                            Binding="{Binding OffsetText}"
-                                            Width="70" />
-                        <DataGridTextColumn Header="名称"
-                                            Binding="{Binding Name}"
-                                            Width="190" />
-                        <DataGridTextColumn Header="值"
-                                            Binding="{Binding Value}"
-                                            Width="*" />
-                    </DataGrid.Columns>
-                </DataGrid>
+                <StackPanel Grid.Row="5">
+                    <Border Padding="4,3"
+                            BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                            BorderThickness="0,1,0,1">
+                        <TextBlock FontWeight="SemiBold"
+                                   Text="方法" />
+                    </Border>
+                    <DataGrid x:Name="MethodsGrid"
+                              ItemsSource="{Binding Methods}"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              HeadersVisibility="Column"
+                              ColumnHeaderHeight="32"
+                              GridLinesVisibility="Horizontal"
+                              BorderThickness="0"
+                              Background="Transparent">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="方法名"
+                                                Binding="{Binding Name}"
+                                                Width="200" />
+                            <DataGridTextColumn Header="参数"
+                                                Binding="{Binding Parameters}"
+                                                Width="*" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </StackPanel>
             </Grid>
         </Grid>
 

@@ -27,7 +27,10 @@ public sealed class SoftwareBreakpointManager : IDisposable
     public BreakpointEntry? Find(ulong address) =>
         _breakpoints.TryGetValue(address, out BreakpointEntry? entry) ? entry : null;
 
-    public bool Add(ulong address, bool temporary = false)
+    public bool Add(
+        ulong address,
+        bool temporary = false,
+        byte? originalByte = null)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         if (address == 0)
@@ -40,7 +43,9 @@ public sealed class SoftwareBreakpointManager : IDisposable
             Address = address,
             Kind = BreakpointKind.Software,
             IsEnabled = true,
-            IsTemporary = temporary
+            IsTemporary = temporary,
+            OriginalByte = originalByte ?? 0,
+            HasOriginalByte = originalByte.HasValue
         };
 
         if (!_breakpoints.TryAdd(address, entry))
@@ -48,7 +53,7 @@ public sealed class SoftwareBreakpointManager : IDisposable
             return false;
         }
 
-        if (TryWriteBreakpoint(address))
+        if (TryWriteBreakpoint(entry))
         {
             BreakpointChanged?.Invoke(entry);
             return true;
@@ -61,12 +66,21 @@ public sealed class SoftwareBreakpointManager : IDisposable
     public bool Remove(ulong address)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
-        if (!_breakpoints.TryRemove(address, out BreakpointEntry? entry))
+        if (!_breakpoints.TryGetValue(address, out BreakpointEntry? entry))
         {
             return false;
         }
 
-        TryRestoreOriginal(entry);
+        if (!TryRestoreOriginal(entry))
+        {
+            return false;
+        }
+
+        if (!_breakpoints.TryRemove(address, out _))
+        {
+            return false;
+        }
+
         BreakpointChanged?.Invoke(entry);
         return true;
     }
@@ -98,7 +112,7 @@ public sealed class SoftwareBreakpointManager : IDisposable
             return false;
         }
 
-        if (!TryWriteBreakpoint(address))
+        if (!TryWriteBreakpoint(entry))
         {
             return false;
         }
@@ -118,6 +132,65 @@ public sealed class SoftwareBreakpointManager : IDisposable
         }
     }
 
+    public bool UpdateCondition(ulong address, string? condition)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        if (!_breakpoints.TryGetValue(address, out BreakpointEntry? entry))
+        {
+            return false;
+        }
+
+        entry.Condition = condition?.Trim() ?? string.Empty;
+        entry.ConditionMissCount = 0;
+        entry.HasConditionError = false;
+        BreakpointChanged?.Invoke(entry);
+        return true;
+    }
+
+    public bool MarkInternal(ulong address, string ownerId)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        if (!_breakpoints.TryGetValue(address, out BreakpointEntry? entry) ||
+            string.IsNullOrWhiteSpace(ownerId))
+        {
+            return false;
+        }
+
+        entry.IsInternal = true;
+        entry.InternalOwnerId = ownerId;
+        entry.Comment = "InstructionAccessWatch";
+        BreakpointChanged?.Invoke(entry);
+        return true;
+    }
+
+    public void RecordConditionMiss(ulong address)
+    {
+        if (!_breakpoints.TryGetValue(address, out BreakpointEntry? entry))
+        {
+            return;
+        }
+
+        entry.ConditionMissCount++;
+        entry.HasConditionError = false;
+        BreakpointChanged?.Invoke(entry);
+    }
+
+    public void SetConditionError(ulong address, bool hasError)
+    {
+        if (!_breakpoints.TryGetValue(address, out BreakpointEntry? entry))
+        {
+            return;
+        }
+
+        if (entry.HasConditionError == hasError)
+        {
+            return;
+        }
+
+        entry.HasConditionError = hasError;
+        BreakpointChanged?.Invoke(entry);
+    }
+
     public bool HandleHit(ulong exceptionAddress, out BreakpointEntry? entry)
     {
         if (exceptionAddress == 0)
@@ -126,8 +199,7 @@ public sealed class SoftwareBreakpointManager : IDisposable
             return false;
         }
 
-        ulong address = exceptionAddress - 1;
-        if (!_breakpoints.TryGetValue(address, out entry) || !entry.IsEnabled)
+        if (!TryResolveHit(exceptionAddress, out entry) || entry is null)
         {
             entry = null;
             return false;
@@ -145,6 +217,34 @@ public sealed class SoftwareBreakpointManager : IDisposable
         return true;
     }
 
+    public bool TryResolveHit(
+        ulong exceptionAddress,
+        out BreakpointEntry? entry)
+    {
+        entry = null;
+        if (exceptionAddress == 0)
+        {
+            return false;
+        }
+
+        if (_breakpoints.TryGetValue(exceptionAddress, out entry) &&
+            entry.IsEnabled)
+        {
+            return true;
+        }
+
+        ulong adjusted = exceptionAddress - 1;
+        if (adjusted != 0 &&
+            _breakpoints.TryGetValue(adjusted, out entry) &&
+            entry.IsEnabled)
+        {
+            return true;
+        }
+
+        entry = null;
+        return false;
+    }
+
     public void ArmAll()
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
@@ -152,7 +252,7 @@ public sealed class SoftwareBreakpointManager : IDisposable
         {
             if (entry.IsEnabled)
             {
-                TryWriteBreakpoint(entry.Address);
+                TryWriteBreakpoint(entry);
             }
         }
     }
@@ -177,37 +277,39 @@ public sealed class SoftwareBreakpointManager : IDisposable
         _disposed = true;
     }
 
-    private bool TryWriteBreakpoint(ulong address)
+    private bool TryWriteBreakpoint(BreakpointEntry entry)
     {
-        Span<byte> original = stackalloc byte[1];
-        if (!_process.TryReadBytes(address, original))
+        if (!entry.HasOriginalByte)
         {
-            return false;
-        }
+            Span<byte> original = stackalloc byte[1];
+            if (!_process.TryReadBytes(entry.Address, original))
+            {
+                return false;
+            }
 
-        BreakpointEntry? entry = Find(address);
-        if (entry is not null)
-        {
             entry.OriginalByte = original[0];
+            entry.HasOriginalByte = true;
         }
 
         Span<byte> patch = stackalloc byte[1] { BreakpointInstruction };
-        if (!_process.TryWriteBytes(address, patch))
+        if (!_process.TryWriteBytes(entry.Address, patch))
         {
             return false;
         }
 
-        if (entry is not null)
-        {
-            entry.IsArmed = true;
-        }
+        entry.IsArmed = true;
 
-        FlushInstructionCache(address);
+        FlushInstructionCache(entry.Address);
         return true;
     }
 
     private bool TryRestoreOriginal(BreakpointEntry entry)
     {
+        if (!entry.HasOriginalByte)
+        {
+            return false;
+        }
+
         Span<byte> original = stackalloc byte[1] { entry.OriginalByte };
         if (!_process.TryWriteBytes(entry.Address, original))
         {

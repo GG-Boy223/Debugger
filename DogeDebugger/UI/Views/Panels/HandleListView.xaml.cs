@@ -35,11 +35,22 @@ public partial class HandleListView : UserControl
 
         _view.Filter = FilterHandle;
         _view.Refresh();
+        UpdateCounts();
     }
 
     private void OnFilterChanged(object sender, RoutedEventArgs eventArgs)
     {
         _view?.Refresh();
+        UpdateCounts();
+    }
+
+    private void UpdateCounts()
+    {
+        HandleTotalCountRun.Text = (HandleGrid.ItemsSource as System.Collections.IEnumerable)
+            ?.Cast<object>()
+            .Count()
+            .ToString() ?? "0";
+        HandleViewCountRun.Text = _view?.Cast<object>().Count().ToString() ?? "0";
     }
 
     private bool FilterHandle(object value)

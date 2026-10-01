@@ -5,10 +5,10 @@
              xmlns:controls="clr-namespace:DogeDebugger.UI.Controls">
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
+            <RowDefinition Height="34" />
+            <RowDefinition Height="41" />
             <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
+            <RowDefinition Height="21" />
         </Grid.RowDefinitions>
 
         <Border Grid.Row="0"
@@ -19,8 +19,10 @@
                 <StackPanel DockPanel.Dock="Left"
                             Orientation="Horizontal">
                     <ui:Button Appearance="Primary"
+                               Width="59"
+                               Height="22"
                                FontSize="11"
-                               Padding="8,3"
+                               Padding="7,2"
                                Command="{Binding RefreshTargetPanelsCommand}">
                         <StackPanel Orientation="Horizontal">
                             <ui:SymbolIcon Symbol="ArrowSync24"
@@ -30,6 +32,7 @@
                     </ui:Button>
                     <Separator Margin="7,2" />
                     <CheckBox x:Name="GroupByModuleCheck"
+                              Width="120"
                               IsChecked="True"
                               Margin="0,0,8,0"
                               VerticalAlignment="Center"
@@ -47,7 +50,7 @@
                                Text="搜索:" />
                     <TextBox x:Name="SearchTextBox"
                              Width="200"
-                             Height="26"
+                             Height="32"
                              Padding="6,2"
                              FontFamily="Cascadia Code, Consolas, monospace"
                              FontSize="11"
@@ -132,7 +135,7 @@
                   Background="Transparent"
                   Foreground="#E4000000"
                   FontFamily="Cascadia Code, Consolas, monospace"
-                  FontSize="12"
+                  FontSize="11"
                   MouseDoubleClick="OnRegionGridDoubleClick">
             <DataGrid.Resources>
                 <Style x:Key="RegionCellText"
@@ -186,48 +189,39 @@
                 <DataGridTextColumn Header="地址"
                                     Binding="{Binding BaseAddressText}"
                                     ElementStyle="{StaticResource RegionCellText}"
-                                    MinWidth="118"
-                                    Width="118" />
+                                    Width="160" />
                 <DataGridTextColumn Header="分配保护"
-                                    Binding="{Binding AllocationBaseText}"
+                                    Binding="{Binding AllocationProtectDisplayText}"
                                     ElementStyle="{StaticResource RegionCellText}"
-                                    MinWidth="118"
-                                    Width="118" />
+                                    Width="130" />
                 <DataGridTextColumn Header="状态"
                                     Binding="{Binding StateText}"
                                     ElementStyle="{StaticResource RegionCellText}"
-                                    MinWidth="60"
-                                    Width="60" />
+                                    Width="80" />
                 <DataGridTextColumn Header="保护"
-                                    Binding="{Binding ProtectText}"
+                                    Binding="{Binding ProtectDisplayText}"
                                     ElementStyle="{StaticResource RegionCellText}"
-                                    MinWidth="88"
-                                    Width="88" />
+                                    Width="140" />
                 <DataGridTextColumn Header="类型"
                                     Binding="{Binding TypeText}"
                                     ElementStyle="{StaticResource RegionCellText}"
-                                    MinWidth="62"
-                                    Width="62" />
+                                    Width="80" />
                 <DataGridTextColumn Header="大小"
                                     Binding="{Binding SizeText}"
                                     ElementStyle="{StaticResource RegionCellText}"
-                                    MinWidth="78"
-                                    Width="78" />
+                                    Width="120" />
                 <DataGridTextColumn Header="模块"
                                     Binding="{Binding ModuleName}"
                                     ElementStyle="{StaticResource RegionCellText}"
-                                    MinWidth="118"
-                                    Width="118" />
+                                    Width="140" />
                 <DataGridTextColumn Header="节"
                                     Binding="{Binding SectionName}"
                                     ElementStyle="{StaticResource RegionCellText}"
-                                    MinWidth="78"
-                                    Width="78" />
+                                    Width="100" />
                 <DataGridTextColumn Header="备注"
-                                    Binding="{Binding AllocationProtectText}"
+                                    Binding="{Binding SectionName}"
                                     ElementStyle="{StaticResource RegionCellText}"
-                                    MinWidth="124"
-                                    Width="124" />
+                                    Width="*" />
             </DataGrid.Columns>
         </DataGrid>
 
@@ -240,17 +234,16 @@
                 <TextBlock DockPanel.Dock="Left"
                            FontSize="11"
                            Foreground="{DynamicResource TextFillColorSecondaryBrush}">
-                    <Run Text="区域数: " />
+                    <Run Text="区域数:  " />
                     <Run FontWeight="SemiBold"
                          Foreground="{DynamicResource TextFillColorPrimaryBrush}"
                          Text="{Binding MemoryRegions.Count, Mode=OneWay}" />
                 </TextBlock>
                 <TextBlock DockPanel.Dock="Right"
                            HorizontalAlignment="Right"
-                           FontFamily="Cascadia Code, Consolas, monospace"
                            FontSize="11"
                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                           Text="{Binding StatusText}" />
+                           Text="{Binding CommittedMemoryText}" />
                 <Border />
             </DockPanel>
         </Border>

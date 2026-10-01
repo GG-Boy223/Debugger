@@ -67,7 +67,7 @@ public partial class MemorySearchWorkspaceViewModel : ObservableObject
     {
         foreach (MemorySearchViewModel tab in Tabs)
         {
-            tab.ResetCommand.Execute(null);
+            tab.ResetScanCommand.Execute(null);
         }
     }
 

@@ -3,123 +3,212 @@
                  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
                  Title="插件管理器"
-                 Width="1040"
-                 Height="640"
+                 Width="980"
+                 Height="680"
                  MinWidth="820"
-                 MinHeight="520"
+                 MinHeight="540"
                  WindowStartupLocation="CenterOwner"
                  ShowInTaskbar="False"
                  ExtendsContentIntoTitleBar="True"
                  FontFamily="{DynamicResource AppUiFontFamily}"
                  FontSize="{DynamicResource AppUiFontSize}"
-                 Background="{DynamicResource WindowBackgroundBrush}">
+                 Background="#FFF8F8F8">
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="36" />
-            <RowDefinition Height="52" />
+            <RowDefinition Height="128" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
-            <RowDefinition Height="58" />
         </Grid.RowDefinitions>
+
+        <Border Grid.Row="0">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0,0"
+                                     EndPoint="1,0">
+                    <GradientStop Offset="0"
+                                  Color="#FF6943ED" />
+                    <GradientStop Offset="0.50"
+                                  Color="#FF1592B9" />
+                    <GradientStop Offset="1"
+                                  Color="#FF5E48EC" />
+                </LinearGradientBrush>
+            </Border.Background>
+        </Border>
 
         <ui:TitleBar Grid.Row="0"
                      Title="插件管理器"
+                     Background="Transparent"
+                     Foreground="White"
                      ShowMinimize="False"
                      ShowMaximize="False"
                      ShowClose="True" />
 
-        <Border Grid.Row="1"
-                Padding="14,8"
-                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
-                BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
-                BorderThickness="0,0,0,1">
-            <DockPanel LastChildFill="False">
-                <TextBlock VerticalAlignment="Center"
-                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                           Text="启用状态会写入 settings.json；托管插件加载失败时会保留错误信息。" />
-                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                    <Button Width="92"
-                            Margin="0,0,8,0"
-                            Click="OnRefreshClick"
-                            Content="刷新" />
-                    <Button Width="112"
-                            Margin="0,0,8,0"
-                            Click="OnLoadExternalClick"
-                            Content="加载插件..." />
-                    <Button Width="112"
-                            Click="OnLoadSelectedClick"
-                            Content="加载选中" />
+        <Grid Grid.Row="0"
+              Margin="25,52,24,20">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Border Width="64"
+                    Height="64"
+                    CornerRadius="10"
+                    Background="#24FFFFFF"
+                    BorderBrush="#40FFFFFF"
+                    BorderThickness="1">
+                <ui:SymbolIcon Symbol="PuzzlePiece24"
+                               FontSize="28"
+                               Foreground="White"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center" />
+            </Border>
+            <StackPanel Grid.Column="1"
+                        Margin="12,0,20,0"
+                        VerticalAlignment="Center">
+                <TextBlock FontSize="28"
+                           FontWeight="Bold"
+                           Foreground="White"
+                           Text="DogeDebugger Plugins" />
+                <TextBlock Margin="0,4,0,0"
+                           FontSize="13"
+                           Foreground="#E8FFFFFF"
+                           Text="管理 C# DLL、WebView2 插件和它们注册的 MCP Tool" />
+            </StackPanel>
+            <Button Grid.Column="2"
+                    Width="78"
+                    Height="29"
+                    Margin="0,0,4,0"
+                    VerticalAlignment="Center"
+                    Background="#24FFFFFF"
+                    BorderBrush="#40FFFFFF"
+                    Foreground="White"
+                    Click="OnRefreshClick">
+                <StackPanel Orientation="Horizontal">
+                    <ui:SymbolIcon Symbol="ArrowClockwise24"
+                                   FontSize="13" />
+                    <TextBlock Margin="4,0,0,0"
+                               Text="刷新" />
                 </StackPanel>
-            </DockPanel>
-        </Border>
+            </Button>
+            <Button Grid.Column="3"
+                    Width="78"
+                    Height="29"
+                    VerticalAlignment="Center"
+                    Background="#24FFFFFF"
+                    BorderBrush="#40FFFFFF"
+                    Foreground="White"
+                    Click="OnOpenDirectoryClick">
+                <StackPanel Orientation="Horizontal">
+                    <ui:SymbolIcon Symbol="FolderOpen24"
+                                   FontSize="13" />
+                    <TextBlock Margin="4,0,0,0"
+                               Text="目录" />
+                </StackPanel>
+            </Button>
+        </Grid>
 
-        <DataGrid x:Name="PluginGrid"
-                  Grid.Row="2"
-                  Margin="14"
-                  AutoGenerateColumns="False"
-                  CanUserAddRows="False"
-                  CanUserDeleteRows="False"
-                  CanUserReorderColumns="True"
-                  CanUserResizeRows="False"
-                  GridLinesVisibility="Horizontal"
-                  HeadersVisibility="Column"
-                  IsReadOnly="True"
-                  RowHeaderWidth="0"
-                  SelectionMode="Single">
-            <DataGrid.Columns>
-                <DataGridCheckBoxColumn Header="启用"
-                                        Width="56"
-                                        Binding="{Binding IsEnabled}" />
-                <DataGridTextColumn Header="名称"
-                                    Width="150"
-                                    Binding="{Binding Name}" />
-                <DataGridTextColumn Header="版本"
-                                    Width="80"
-                                    Binding="{Binding Version}" />
-                <DataGridTextColumn Header="类型"
-                                    Width="80"
-                                    Binding="{Binding PluginType}" />
-                <DataGridTextColumn Header="状态"
-                                    Width="100"
-                                    Binding="{Binding Status}" />
-                <DataGridTextColumn Header="ID"
-                                    Width="180"
-                                    Binding="{Binding Id}" />
-                <DataGridTextColumn Header="说明"
-                                    Width="*"
-                                    Binding="{Binding Description}" />
-                <DataGridTextColumn Header="错误"
-                                    Width="180"
-                                    Binding="{Binding Error}" />
-            </DataGrid.Columns>
-        </DataGrid>
+        <Grid Grid.Row="1"
+              Margin="24,14,24,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock x:Name="SummaryText"
+                       Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+            <TextBlock Grid.Column="1"
+                       Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                       Text="新发现插件默认禁用" />
+        </Grid>
 
-        <Border Grid.Row="3"
-                Padding="14,9"
-                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
-                BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
-                BorderThickness="0,1,0,0">
-            <DockPanel LastChildFill="False">
-                <TextBlock x:Name="SummaryText"
+        <Border Grid.Row="2"
+                Margin="24,4,24,13"
+                CornerRadius="8"
+                BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+            <Grid>
+                <TextBlock x:Name="EmptyStateText"
+                           HorizontalAlignment="Center"
                            VerticalAlignment="Center"
-                           Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                    <Button Width="100"
-                            Margin="0,0,8,0"
-                            Click="OnToggleSelectedClick"
-                            Content="启用 / 禁用" />
-                    <Button Width="100"
-                            Margin="0,0,8,0"
-                            Click="OnUnloadSelectedClick"
-                            Content="卸载" />
-                    <Button Width="100"
-                            Margin="0,0,8,0"
-                            Click="OnRemoveSelectedClick"
-                            Content="删除插件" />
-                    <Button Width="88"
-                            Click="OnCloseClick"
-                            Content="关闭" />
-                </StackPanel>
-            </DockPanel>
+                           Margin="0,-4,0,0"
+                           FontSize="14"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                           Text="Plugins 文件夹中还没有发现 plugin.json" />
+
+                <Grid x:Name="PluginContent"
+                      Visibility="Collapsed">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <DataGrid x:Name="PluginGrid"
+                              Margin="1"
+                              AutoGenerateColumns="False"
+                              CanUserAddRows="False"
+                              CanUserDeleteRows="False"
+                              CanUserReorderColumns="True"
+                              CanUserResizeRows="False"
+                              GridLinesVisibility="Horizontal"
+                              HeadersVisibility="Column"
+                              IsReadOnly="True"
+                              RowHeaderWidth="0"
+                              SelectionMode="Single">
+                        <DataGrid.Columns>
+                            <DataGridCheckBoxColumn Header="启用"
+                                                    Width="56"
+                                                    Binding="{Binding IsEnabled}" />
+                            <DataGridTextColumn Header="名称"
+                                                Width="150"
+                                                Binding="{Binding Name}" />
+                            <DataGridTextColumn Header="版本"
+                                                Width="80"
+                                                Binding="{Binding Version}" />
+                            <DataGridTextColumn Header="类型"
+                                                Width="80"
+                                                Binding="{Binding PluginType}" />
+                            <DataGridTextColumn Header="状态"
+                                                Width="100"
+                                                Binding="{Binding Status}" />
+                            <DataGridTextColumn Header="ID"
+                                                Width="180"
+                                                Binding="{Binding Id}" />
+                            <DataGridTextColumn Header="说明"
+                                                Width="*"
+                                                Binding="{Binding Description}" />
+                            <DataGridTextColumn Header="错误"
+                                                Width="180"
+                                                Binding="{Binding Error}" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <Border Grid.Row="1"
+                            Padding="12,9"
+                            BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                            BorderThickness="0,1,0,0">
+                        <StackPanel HorizontalAlignment="Right"
+                                    Orientation="Horizontal">
+                            <Button Width="100"
+                                    Margin="0,0,8,0"
+                                    Click="OnLoadSelectedClick"
+                                    Content="加载选中" />
+                            <Button Width="100"
+                                    Margin="0,0,8,0"
+                                    Click="OnToggleSelectedClick"
+                                    Content="启用 / 禁用" />
+                            <Button Width="100"
+                                    Margin="0,0,8,0"
+                                    Click="OnUnloadSelectedClick"
+                                    Content="卸载" />
+                            <Button Width="100"
+                                    Margin="0,0,8,0"
+                                    Click="OnRemoveSelectedClick"
+                                    Content="删除插件" />
+                            <Button Width="88"
+                                    Click="OnCloseClick"
+                                    Content="关闭" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </Grid>
         </Border>
     </Grid>
 </ui:FluentWindow>

@@ -5,31 +5,32 @@
              xmlns:controls="clr-namespace:DogeDebugger.UI.Controls">
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
+            <RowDefinition Height="29" />
             <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
+            <RowDefinition Height="21" />
         </Grid.RowDefinitions>
 
         <Border Grid.Row="0"
                 Padding="6,3"
                 BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
                 BorderThickness="0,0,0,1">
-            <DockPanel>
-                <ui:Button Appearance="Primary"
-                           FontSize="11"
-                           Padding="10,3"
-                           DockPanel.Dock="Right"
+            <Grid>
+                <ui:Button Width="63"
+                           Height="22"
+                           HorizontalAlignment="Left"
+                           Appearance="Primary"
                            Command="{Binding RefreshExceptionHandlersCommand}">
                     <StackPanel Orientation="Horizontal">
                         <ui:SymbolIcon Symbol="ArrowSync24"
+                                       FontSize="12"
                                        Margin="0,0,5,0" />
-                        <TextBlock Text="重新扫描" />
+                        <TextBlock Text="刷新" />
                     </StackPanel>
                 </ui:Button>
-                <TextBlock VerticalAlignment="Center"
-                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                <TextBlock HorizontalAlignment="Right"
+                           VerticalAlignment="Center"
                            Text="{Binding ExceptionHandlerStatusText}" />
-            </DockPanel>
+            </Grid>
         </Border>
 
         <TabControl Grid.Row="1">
@@ -48,65 +49,25 @@
                           VirtualizingPanel.IsVirtualizing="True">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="#"
-                                            Width="44"
+                                            Width="40"
                                             Binding="{Binding Index}" />
-                        <DataGridTextColumn Header="类型"
-                                            Width="70"
-                                            Binding="{Binding TypeName}" />
-                        <DataGridTextColumn Header="节点"
-                                            Width="150"
-                                            Binding="{Binding DisplayNodeAddress}" />
-                        <DataGridTextColumn Header="编码指针"
-                                            Width="150"
-                                            Binding="{Binding DisplayEncodedPointer}" />
-                        <DataGridTextColumn Header="处理函数"
-                                            Width="150"
+                        <DataGridTextColumn Header="异常处理地址"
+                                            Width="160"
                                             Binding="{Binding DisplayDecodedAddress}" />
                         <DataGridTextColumn Header="模块"
-                                            Width="120"
-                                            Binding="{Binding ModuleName}" />
-                        <DataGridTextColumn Header="符号"
-                                            Width="260"
-                                            Binding="{Binding SymbolName}" />
-                    </DataGrid.Columns>
-                </DataGrid>
-            </TabItem>
-            <TabItem Header="SEH / .pdata">
-                <DataGrid ItemsSource="{Binding PdataEntries}"
-                          AutoGenerateColumns="False"
-                          IsReadOnly="True"
-                          CanUserAddRows="False"
-                          CanUserDeleteRows="False"
-                          HeadersVisibility="Column"
-                          ColumnHeaderHeight="32"
-                          GridLinesVisibility="Horizontal"
-                          BorderThickness="0"
-                          Background="Transparent"
-                          EnableRowVirtualization="True"
-                          VirtualizingPanel.IsVirtualizing="True">
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Header="#"
-                                            Width="44"
-                                            Binding="{Binding Index}" />
-                        <DataGridTextColumn Header="模块"
-                                            Width="120"
-                                            Binding="{Binding ModuleName}" />
-                        <DataGridTextColumn Header="函数范围"
-                                            Width="220"
-                                            Binding="{Binding DisplayFunctionRange}" />
-                        <DataGridTextColumn Header="处理函数"
                                             Width="150"
-                                            Binding="{Binding DisplayHandler}" />
+                                            Binding="{Binding ModuleName}" />
                         <DataGridTextColumn Header="符号"
-                                            Width="240"
-                                            Binding="{Binding HandlerSymbol}" />
-                        <DataGridTextColumn Header="标志"
-                                            Width="140"
-                                            Binding="{Binding FlagNames}" />
+                                            Width="*"
+                                            Binding="{Binding SymbolName}" />
+                        <DataGridTextColumn Header="类型"
+                                            Width="60"
+                                            Binding="{Binding TypeName}" />
                     </DataGrid.Columns>
                 </DataGrid>
             </TabItem>
-            <TabItem Header="Hook 检测">
+
+            <TabItem Header="异常Hook">
                 <DataGrid ItemsSource="{Binding HookEntries}"
                           AutoGenerateColumns="False"
                           IsReadOnly="True"
@@ -121,23 +82,56 @@
                           VirtualizingPanel.IsVirtualizing="True">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="函数"
-                                            Width="190"
+                                            Width="220"
                                             Binding="{Binding FunctionName}" />
                         <DataGridTextColumn Header="地址"
-                                            Width="150"
+                                            Width="160"
                                             Binding="{Binding DisplayAddress}" />
-                        <DataGridTextColumn Header="预期"
-                                            Width="100"
-                                            Binding="{Binding ExpectedInstruction}" />
-                        <DataGridTextColumn Header="实际"
-                                            Width="220"
-                                            Binding="{Binding ActualInstruction}" />
-                        <DataGridTextColumn Header="字节"
-                                            Width="150"
-                                            Binding="{Binding ActualBytes}" />
                         <DataGridTextColumn Header="状态"
-                                            Width="120"
+                                            Width="100"
                                             Binding="{Binding Status}" />
+                        <DataGridTextColumn Header="预期指令"
+                                            Width="120"
+                                            Binding="{Binding ExpectedInstruction}" />
+                        <DataGridTextColumn Header="实际指令"
+                                            Width="*"
+                                            Binding="{Binding ActualInstruction}" />
+                    </DataGrid.Columns>
+                </DataGrid>
+            </TabItem>
+
+            <TabItem Header=".pdata SEH">
+                <DataGrid ItemsSource="{Binding PdataEntries}"
+                          AutoGenerateColumns="False"
+                          IsReadOnly="True"
+                          CanUserAddRows="False"
+                          CanUserDeleteRows="False"
+                          HeadersVisibility="Column"
+                          ColumnHeaderHeight="32"
+                          GridLinesVisibility="Horizontal"
+                          BorderThickness="0"
+                          Background="Transparent"
+                          EnableRowVirtualization="True"
+                          VirtualizingPanel.IsVirtualizing="True">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="#"
+                                            Width="40"
+                                            Binding="{Binding Index}" />
+                        <DataGridTextColumn Header="函数范围"
+                                            Width="280"
+                                            Binding="{Binding DisplayFunctionRange}" />
+                        <DataGridTextColumn Header="Handler"
+                                            Width="160"
+                                            Binding="{Binding DisplayHandler}" />
+                        <DataGridTextColumn Header="Handler 符号"
+                                            Width="580"
+                                            Binding="{Binding HandlerSymbol}" />
+                        <DataGridTextColumn Header="模块"
+                                            Width="150"
+                                            Binding="{Binding ModuleName}" />
+                        <DataGridTextColumn Header="标志"
+                                            Width="100"
+                                            Binding="{Binding FlagNames}" />
                     </DataGrid.Columns>
                 </DataGrid>
             </TabItem>
@@ -155,45 +149,5 @@
 
         <controls:PanelProcessOverlay Grid.Row="0"
                                       Grid.RowSpan="3" />
-
-        <Border Grid.Row="0"
-                Grid.RowSpan="3"
-                Panel.ZIndex="19"
-                Background="{DynamicResource SolidBackgroundFillColorBaseBrush}">
-            <Border.Style>
-                <Style TargetType="Border">
-                    <Setter Property="Visibility" Value="Collapsed" />
-                    <Style.Triggers>
-                        <MultiDataTrigger>
-                            <MultiDataTrigger.Conditions>
-                                <Condition Binding="{Binding IsTargetOpen}" Value="True" />
-                                <Condition Binding="{Binding HasExceptionHandlerResult}" Value="False" />
-                            </MultiDataTrigger.Conditions>
-                            <Setter Property="Visibility" Value="Visible" />
-                        </MultiDataTrigger>
-                    </Style.Triggers>
-                </Style>
-            </Border.Style>
-            <StackPanel HorizontalAlignment="Center"
-                        VerticalAlignment="Center">
-                <ui:SymbolIcon Symbol="ArrowDownload24"
-                               FontSize="40"
-                               Margin="0,0,0,10"
-                               Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-                <TextBlock HorizontalAlignment="Center"
-                           Text="{Binding ExceptionHandlerStatusText}" />
-                <ProgressBar Width="320"
-                             Height="4"
-                             Margin="0,12,0,12"
-                             Minimum="0"
-                             Maximum="1"
-                             IsIndeterminate="{Binding IsExceptionHandlerScanning}" />
-                <ui:Button Appearance="Primary"
-                           Padding="12,5"
-                           HorizontalAlignment="Center"
-                           Command="{Binding RefreshExceptionHandlersCommand}"
-                           Content="重试" />
-            </StackPanel>
-        </Border>
     </Grid>
 </UserControl>

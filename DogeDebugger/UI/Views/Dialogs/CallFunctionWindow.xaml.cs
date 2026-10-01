@@ -12,9 +12,6 @@ public partial class CallFunctionWindow : Window
     {
         _viewModel = viewModel;
         InitializeComponent();
-        AddressBox.Text = viewModel.SelectedInstruction is { Address: not 0 } instruction
-            ? $"0x{instruction.Address:X}"
-            : viewModel.AddressInput;
         Loaded += (_, _) => AddressBox.Focus();
     }
 

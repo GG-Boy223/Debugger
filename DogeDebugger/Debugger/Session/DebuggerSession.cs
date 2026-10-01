@@ -49,6 +49,9 @@ public sealed class DebuggerSession : IAsyncDisposable
         _signatureGenerator = new AobSignatureGenerator(_search);
         Target = new TargetProcess();
         Debugger = new UserModeDebugger(Target);
+        InstructionAccessWatches = new InstructionAccessWatchManager(
+            Target,
+            Debugger);
         UnrealEngine = new UnrealEngineService(this);
         Debugger.Paused += HandlePaused;
         Debugger.DebugEventReceived += HandleDebugEventReceived;
@@ -59,9 +62,14 @@ public sealed class DebuggerSession : IAsyncDisposable
 
     public UserModeDebugger Debugger { get; }
 
+    public InstructionAccessWatchManager InstructionAccessWatches { get; }
+
     public UnrealEngineService UnrealEngine { get; }
 
     public SoftwareBreakpointManager Breakpoints => Debugger.Breakpoints;
+
+    public HardwareBreakpointManager HardwareBreakpoints =>
+        Debugger.HardwareBreakpoints;
 
     public RttiWorkspaceService RttiWorkspace => _rttiWorkspace;
 
@@ -258,6 +266,20 @@ public sealed class DebuggerSession : IAsyncDisposable
         return Target.TryWriteBytes(address, bytes);
     }
 
+    public bool ChangeMemoryProtection(
+        ulong address,
+        ulong size,
+        uint newProtection,
+        out uint oldProtection)
+    {
+        EnsureOpen();
+        return Target.TryChangeMemoryProtection(
+            address,
+            size,
+            newProtection,
+            out oldProtection);
+    }
+
     public IReadOnlyList<InstructionSnapshot> Disassemble(
         ulong address,
         int instructionCount,
@@ -306,7 +328,9 @@ public sealed class DebuggerSession : IAsyncDisposable
         CancellationToken cancellationToken = default)
     {
         EnsureOpen();
-        return _valueScanner.InitialScan(Target, options, cancellationToken);
+        return RunValueScanWithOptionalSuspension(
+            options,
+            () => _valueScanner.InitialScan(Target, options, cancellationToken));
     }
 
     public MemoryValueScanResult RefineValues(
@@ -315,7 +339,13 @@ public sealed class DebuggerSession : IAsyncDisposable
         CancellationToken cancellationToken = default)
     {
         EnsureOpen();
-        return _valueScanner.NextScan(Target, previous, options, cancellationToken);
+        return RunValueScanWithOptionalSuspension(
+            options,
+            () => _valueScanner.NextScan(
+                Target,
+                previous,
+                options,
+                cancellationToken));
     }
 
     public PointerScanResult ScanPointers(
@@ -486,6 +516,7 @@ public sealed class DebuggerSession : IAsyncDisposable
         Debugger.Paused -= HandlePaused;
         Debugger.DebugEventReceived -= HandleDebugEventReceived;
         Debugger.StateChanged -= HandleStateChanged;
+        InstructionAccessWatches.Dispose();
         await Debugger.DisposeAsync().ConfigureAwait(false);
         Target.Dispose();
         _gate.Dispose();
@@ -494,6 +525,7 @@ public sealed class DebuggerSession : IAsyncDisposable
 
     private async Task CloseCoreAsync()
     {
+        await InstructionAccessWatches.StopAllAsync().ConfigureAwait(false);
         if (Debugger.IsDebugging)
         {
             await Debugger.DetachAsync(CancellationToken.None).ConfigureAwait(false);
@@ -524,6 +556,35 @@ public sealed class DebuggerSession : IAsyncDisposable
         if (!Target.IsOpen)
         {
             throw new InvalidOperationException("No target process is open.");
+        }
+    }
+
+    private MemoryValueScanResult RunValueScanWithOptionalSuspension(
+        MemoryValueScanOptions options,
+        Func<MemoryValueScanResult> scan)
+    {
+        bool suspended = false;
+        if (options.PauseWhileScanning)
+        {
+            if (!Target.TrySuspendProcess(out int suspendStatus))
+            {
+                throw new InvalidOperationException(
+                    $"无法暂停目标进程（NTSTATUS: 0x{suspendStatus:X8}）。");
+            }
+
+            suspended = true;
+        }
+
+        try
+        {
+            return scan();
+        }
+        finally
+        {
+            if (suspended)
+            {
+                Target.TryResumeProcess(out _);
+            }
         }
     }
 }

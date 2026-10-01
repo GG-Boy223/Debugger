@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:models="clr-namespace:DogeDebugger.Plugins.UnrealEngine.Models"
              xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
-             FontFamily="Cascadia Code, Consolas, monospace"
+             FontFamily="{DynamicResource AppUiFontFamily}"
              FontSize="12">
     <UserControl.Resources>
         <HierarchicalDataTemplate DataType="{x:Type models:UnrealMemberValueEntry}"
@@ -34,16 +34,18 @@
         </Grid.RowDefinitions>
 
         <Border Grid.Row="0"
-                Padding="4,3"
+                Padding="6,4"
                 BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
                 BorderThickness="0,0,0,1">
             <DockPanel>
                 <StackPanel DockPanel.Dock="Left"
                             Orientation="Horizontal">
                     <ui:Button Appearance="Primary"
+                               Width="59"
+                               Height="22"
                                FontSize="11"
-                               Padding="10,3"
-                               Margin="0,0,3,0"
+                               Padding="7,2"
+                               Margin="0,0,4,0"
                                Command="{Binding ScanCommand}">
                         <StackPanel Orientation="Horizontal">
                             <ui:SymbolIcon Symbol="Search24"
@@ -52,15 +54,19 @@
                         </StackPanel>
                     </ui:Button>
                     <ui:Button Appearance="Secondary"
+                               Width="59"
+                               Height="22"
                                FontSize="11"
-                               Padding="10,3"
-                               Margin="0,0,3,0"
+                               Padding="7,2"
+                               Margin="0,0,4,0"
                                Command="{Binding CancelScanCommand}"
                                Content="取消" />
                     <ui:Button Appearance="Secondary"
+                               Width="59"
+                               Height="22"
                                FontSize="11"
-                               Padding="10,3"
-                               Margin="0,0,3,0"
+                               Padding="7,2"
+                               Margin="0,0,4,0"
                                Command="{Binding RescanCommand}">
                         <StackPanel Orientation="Horizontal">
                             <ui:SymbolIcon Symbol="ArrowSync24"
@@ -68,37 +74,49 @@
                             <TextBlock Text="重扫" />
                         </StackPanel>
                     </ui:Button>
-                    <CheckBox Margin="6,0,8,0"
+                    <CheckBox Width="120"
+                              Height="32"
+                              Margin="6,0,8,0"
                               VerticalAlignment="Center"
                               IsChecked="{Binding UseCache}"
                               Content="用缓存" />
                     <ui:Button Appearance="Secondary"
+                               Width="97"
+                               Height="22"
                                FontSize="11"
-                               Padding="9,3"
-                               Margin="0,0,3,0"
+                               Padding="7,2"
+                               Margin="0,0,4,0"
                                Command="{Binding ExportOffsetsCommand}"
                                Content="导出 offsets" />
                     <ui:Button Appearance="Secondary"
+                               Width="97"
+                               Height="22"
                                FontSize="11"
-                               Padding="9,3"
-                               Margin="0,0,3,0"
+                               Padding="7,2"
+                               Margin="0,0,4,0"
                                Command="{Binding ExportNamesCommand}"
                                Content="导出 names" />
                     <ui:Button Appearance="Secondary"
+                               Width="100"
+                               Height="22"
                                FontSize="11"
-                               Padding="9,3"
-                               Margin="0,0,3,0"
+                               Padding="7,2"
+                               Margin="0,0,4,0"
                                Command="{Binding ExportObjectsCommand}"
                                Content="导出 objects" />
                     <ui:Button Appearance="Secondary"
+                               Width="103"
+                               Height="22"
                                FontSize="11"
-                               Padding="9,3"
-                               Margin="0,0,3,0"
+                               Padding="7,2"
+                               Margin="0,0,4,0"
                                IsEnabled="False"
                                Content="应用函数符号" />
                     <ui:Button Appearance="Secondary"
+                               Width="59"
+                               Height="22"
                                FontSize="11"
-                               Padding="9,3"
+                               Padding="7,2"
                                IsEnabled="False"
                                Content="打开" />
                 </StackPanel>
@@ -109,8 +127,8 @@
                     <TextBlock Margin="0,0,4,0"
                                VerticalAlignment="Center"
                                Text="对象地址" />
-                    <TextBox Width="138"
-                             Height="26"
+                    <TextBox Width="135"
+                             Height="32"
                              Padding="5,2"
                              IsReadOnly="True"
                              FontFamily="Cascadia Code, Consolas, monospace"
@@ -127,21 +145,21 @@
         </Border>
 
         <Border Grid.Row="1"
-                Padding="4,3"
+                Padding="6,4"
                 BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
                 BorderThickness="0,0,0,1">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="180" />
+                    <ColumnDefinition Width="120" />
                     <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="180" />
+                    <ColumnDefinition Width="110" />
                     <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="180" />
+                    <ColumnDefinition Width="120" />
                     <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="180" />
+                    <ColumnDefinition Width="120" />
                     <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="180" />
+                    <ColumnDefinition Width="120" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
                 <TextBlock Grid.Column="0"
@@ -149,7 +167,7 @@
                            VerticalAlignment="Center"
                            Text="NamePool" />
                 <ui:TextBox Grid.Column="1"
-                            Height="26"
+                            Height="30"
                             Padding="5,2"
                             PlaceholderText="offset/VA"
                             Text="{Binding ManualNamePool, UpdateSourceTrigger=PropertyChanged}" />
@@ -158,7 +176,7 @@
                            VerticalAlignment="Center"
                            Text="Blocks" />
                 <ui:TextBox Grid.Column="3"
-                            Height="26"
+                            Height="30"
                             Padding="5,2"
                             PlaceholderText="offset/VA"
                             Text="{Binding ManualNamePoolBlocks, UpdateSourceTrigger=PropertyChanged}" />
@@ -167,7 +185,7 @@
                            VerticalAlignment="Center"
                            Text="GObjects" />
                 <ui:TextBox Grid.Column="5"
-                            Height="26"
+                            Height="30"
                             Padding="5,2"
                             PlaceholderText="offset/VA"
                             Text="{Binding ManualGObjects, UpdateSourceTrigger=PropertyChanged}" />
@@ -176,7 +194,7 @@
                            VerticalAlignment="Center"
                            Text="GWorld" />
                 <ui:TextBox Grid.Column="7"
-                            Height="26"
+                            Height="30"
                             Padding="5,2"
                             PlaceholderText="offset/VA"
                             Text="{Binding ManualGWorld, UpdateSourceTrigger=PropertyChanged}" />
@@ -185,7 +203,7 @@
                            VerticalAlignment="Center"
                            Text="GEngine" />
                 <ui:TextBox Grid.Column="9"
-                            Height="26"
+                            Height="30"
                             Padding="5,2"
                             PlaceholderText="offset/VA"
                             Text="{Binding ManualGEngine, UpdateSourceTrigger=PropertyChanged}" />
@@ -205,7 +223,7 @@
                 <ColumnDefinition Width="4" />
                 <ColumnDefinition Width="*" MinWidth="300" />
                 <ColumnDefinition Width="4" />
-                <ColumnDefinition Width="330" MinWidth="240" />
+                <ColumnDefinition Width="420" MinWidth="240" />
             </Grid.ColumnDefinitions>
 
             <Grid Grid.Column="0">
@@ -307,22 +325,22 @@
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="类型"
                                                     Binding="{Binding KindText}"
-                                                    Width="72" />
+                                                    Width="70" />
                                 <DataGridTextColumn Header="索引"
                                                     Binding="{Binding IndexHex}"
-                                                    Width="72" />
+                                                    Width="75" />
                                 <DataGridTextColumn Header="地址"
                                                     Binding="{Binding AddressHex}"
-                                                    Width="132" />
+                                                    Width="115" />
                                 <DataGridTextColumn Header="类"
                                                     Binding="{Binding ClassName}"
-                                                    Width="150" />
+                                                    Width="120" />
                                 <DataGridTextColumn Header="名称"
                                                     Binding="{Binding Name}"
-                                                    Width="180" />
+                                                    Width="160" />
                                 <DataGridTextColumn Header="全名"
                                                     Binding="{Binding FullName}"
-                                                    Width="260" />
+                                                    Width="*" />
                             </DataGrid.Columns>
                         </DataGrid>
                     </TabItem>
@@ -381,29 +399,41 @@
                 </Border>
                 <TabControl Grid.Row="1">
                     <TabItem Header="概览">
-                        <TreeView ItemsSource="{Binding ObjectValues}"
-                                  BorderThickness="0" />
-                    </TabItem>
-                    <TabItem Header="继承">
-                        <DataGrid ItemsSource="{Binding Inheritance}"
-                                  AutoGenerateColumns="False"
-                                  IsReadOnly="True"
-                                  CanUserAddRows="False"
-                                  CanUserDeleteRows="False"
-                                  HeadersVisibility="Column"
-                                  ColumnHeaderHeight="32"
-                                  GridLinesVisibility="Horizontal"
-                                  BorderThickness="0"
-                                  Background="Transparent">
-                            <DataGrid.Columns>
-                                <DataGridTextColumn Header="地址"
-                                                    Binding="{Binding AddressHex}"
-                                                    Width="132" />
-                                <DataGridTextColumn Header="名称"
-                                                    Binding="{Binding Name}"
-                                                    Width="*" />
-                            </DataGrid.Columns>
-                        </DataGrid>
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="36" />
+                            </Grid.RowDefinitions>
+                            <TreeView Grid.Row="0"
+                                      ItemsSource="{Binding ObjectValues}"
+                                      BorderThickness="0" />
+                            <TextBlock Grid.Row="1"
+                                       Padding="8,2"
+                                       Text="继承" />
+                            <DataGrid Grid.Row="2"
+                                      ItemsSource="{Binding Inheritance}"
+                                      AutoGenerateColumns="False"
+                                      IsReadOnly="True"
+                                      CanUserAddRows="False"
+                                      CanUserDeleteRows="False"
+                                      HeadersVisibility="Column"
+                                      ColumnHeaderHeight="32"
+                                      GridLinesVisibility="Horizontal"
+                                      BorderThickness="0"
+                                      Background="Transparent">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="#"
+                                                        Width="35" />
+                                    <DataGridTextColumn Header="地址"
+                                                        Binding="{Binding AddressHex}"
+                                                        Width="115" />
+                                    <DataGridTextColumn Header="名称"
+                                                        Binding="{Binding Name}"
+                                                        Width="*" />
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </Grid>
                     </TabItem>
                     <TabItem Header="成员">
                         <DataGrid ItemsSource="{Binding TypeMembers}"

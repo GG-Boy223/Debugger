@@ -10,23 +10,24 @@
                  xmlns:unreal="clr-namespace:DogeDebugger.Plugins.UnrealEngine.UI"
                  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
                  xmlns:viewModels="clr-namespace:DogeDebugger.UI.ViewModels"
-                 Title="DogeDebugger"
+                 Title="{Binding WindowTitle}"
                  Width="900"
                  Height="600"
                  MinWidth="900"
                  MinHeight="600"
                  WindowStartupLocation="CenterScreen"
                  ExtendsContentIntoTitleBar="True"
-                 PreviewKeyDown="OnMainWindowPreviewKeyDown"
-                 FontFamily="{DynamicResource AppUiFontFamily}"
-                 FontSize="{DynamicResource AppUiFontSize}"
-                 Background="{DynamicResource WindowBackgroundBrush}">
+                  PreviewKeyDown="OnMainWindowPreviewKeyDown"
+                  FontFamily="{DynamicResource AppUiFontFamily}"
+                  FontSize="{DynamicResource AppUiFontSize}"
+                  Background="{DynamicResource WindowBackgroundBrush}">
     <ui:FluentWindow.Resources>
         <Style x:Key="ToolbarButton" TargetType="Button">
             <Setter Property="MinWidth" Value="0" />
             <Setter Property="Height" Value="29" />
             <Setter Property="Margin" Value="1,0" />
             <Setter Property="Padding" Value="8,4" />
+            <Setter Property="BorderThickness" Value="0" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
             <Setter Property="HorizontalContentAlignment" Value="Center" />
         </Style>
@@ -36,6 +37,9 @@
             <Setter Property="Margin" Value="0" />
             <Setter Property="Padding" Value="0" />
             <Setter Property="ToolTipService.ShowDuration" Value="30000" />
+        </Style>
+        <Style x:Key="ToolbarIcon" TargetType="ui:SymbolIcon">
+            <Setter Property="FontSize" Value="14" />
         </Style>
         <Style x:Key="MainMenuItemStyle" TargetType="MenuItem">
             <Setter Property="Foreground" Value="#FF1B1B1B" />
@@ -96,7 +100,7 @@
         </Style>
     </ui:FluentWindow.Resources>
 
-    <Grid>
+    <Grid Margin="0,8,0,0">
         <Grid.RowDefinitions>
             <RowDefinition Height="30" />
             <RowDefinition Height="30" />
@@ -109,7 +113,7 @@
 
         <ui:TitleBar
                      x:Name="AppTitleBar"
-                     Title="DogeDebugger v5.0.0"
+                     Title="{Binding WindowTitle}"
                      ShowMinimize="True"
                      ShowMaximize="True"
                      ShowClose="True"
@@ -412,6 +416,7 @@
                 </MenuItem>
                 <Separator />
                 <MenuItem Header="加载插件..."
+                          IsEnabled="False"
                           Command="{x:Static local:PluginCommands.Load}" />
             </MenuItem>
 
@@ -457,7 +462,7 @@
 
         <Border x:Name="ToolbarDockSlot"
                 Grid.Row="2"
-                Padding="4,3"
+                Padding="4,4"
                 BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
                 BorderThickness="0,0,0,1"
                 Background="{DynamicResource ControlFillColorDefaultBrush}">
@@ -469,7 +474,9 @@
                             Command="{x:Static local:DebuggerCommands.Run}"
                             ToolTip="运行">
                         <StackPanel Orientation="Horizontal">
-                            <ui:SymbolIcon Symbol="Play16" Margin="0,0,4,0" />
+                            <ui:SymbolIcon Style="{StaticResource ToolbarIcon}"
+                                           Margin="0,0,4,0"
+                                           Symbol="Play16" />
                             <TextBlock Text="运行" />
                         </StackPanel>
                     </Button>
@@ -479,7 +486,9 @@
                             Visibility="Collapsed"
                             ToolTip="不处理异常，交给程序处理">
                         <StackPanel Orientation="Horizontal">
-                            <ui:SymbolIcon Symbol="ArrowStepBack16" Margin="0,0,4,0" />
+                            <ui:SymbolIcon Style="{StaticResource ToolbarIcon}"
+                                           Margin="0,0,4,0"
+                                           Symbol="ArrowStepBack16" />
                             <TextBlock Text="不处理" />
                         </StackPanel>
                     </Button>
@@ -487,7 +496,9 @@
                             Command="{x:Static local:DebuggerCommands.Pause}"
                             ToolTip="暂停">
                         <StackPanel Orientation="Horizontal">
-                            <ui:SymbolIcon Symbol="Pause12" Margin="0,0,4,0" />
+                            <ui:SymbolIcon Style="{StaticResource ToolbarIcon}"
+                                           Margin="0,0,4,0"
+                                           Symbol="Pause12" />
                             <TextBlock Text="暂停" />
                         </StackPanel>
                     </Button>
@@ -496,7 +507,9 @@
                             Command="{x:Static local:DebuggerCommands.ToggleBreakpoint}"
                             ToolTip="切换断点">
                         <StackPanel Orientation="Horizontal">
-                            <ui:SymbolIcon Symbol="Bug16" Margin="0,0,4,0" />
+                            <ui:SymbolIcon Style="{StaticResource ToolbarIcon}"
+                                           Margin="0,0,4,0"
+                                           Symbol="Bug16" />
                             <TextBlock Text="断点" />
                         </StackPanel>
                     </Button>
@@ -508,7 +521,9 @@
                             Command="{x:Static local:DebuggerCommands.StepInto}"
                             ToolTip="步入">
                         <StackPanel Orientation="Horizontal">
-                            <ui:SymbolIcon Symbol="ArrowStepIn16" Margin="0,0,4,0" />
+                            <ui:SymbolIcon Style="{StaticResource ToolbarIcon}"
+                                           Margin="0,0,4,0"
+                                           Symbol="ArrowStepIn16" />
                             <TextBlock Text="步入" />
                         </StackPanel>
                     </Button>
@@ -517,7 +532,9 @@
                             Command="{x:Static local:DebuggerCommands.StepOver}"
                             ToolTip="步过">
                         <StackPanel Orientation="Horizontal">
-                            <ui:SymbolIcon Symbol="ArrowStepOver16" Margin="0,0,4,0" />
+                            <ui:SymbolIcon Style="{StaticResource ToolbarIcon}"
+                                           Margin="0,0,4,0"
+                                           Symbol="ArrowStepOver16" />
                             <TextBlock Text="步过" />
                         </StackPanel>
                     </Button>
@@ -525,7 +542,9 @@
                             Command="{x:Static local:DebuggerCommands.StepOut}"
                             ToolTip="步出">
                         <StackPanel Orientation="Horizontal">
-                            <ui:SymbolIcon Symbol="ArrowStepOut16" Margin="0,0,4,0" />
+                            <ui:SymbolIcon Style="{StaticResource ToolbarIcon}"
+                                           Margin="0,0,4,0"
+                                           Symbol="ArrowStepOut16" />
                             <TextBlock Text="步出" />
                         </StackPanel>
                     </Button>
@@ -536,7 +555,9 @@
                             Command="{x:Static local:DebuggerCommands.Detach}"
                             ToolTip="脱离">
                         <StackPanel Orientation="Horizontal">
-                            <ui:SymbolIcon Symbol="ArrowExit20" Margin="0,0,4,0" />
+                            <ui:SymbolIcon Style="{StaticResource ToolbarIcon}"
+                                           Margin="0,0,4,0"
+                                           Symbol="ArrowExit20" />
                             <TextBlock Text="脱离" />
                         </StackPanel>
                     </Button>
@@ -544,7 +565,9 @@
                             Command="{Binding LoadSymbolsCommand}"
                             ToolTip="加载 PDB 符号">
                         <StackPanel Orientation="Horizontal">
-                            <ui:SymbolIcon Symbol="BookInformation20" Margin="0,0,4,0" />
+                            <ui:SymbolIcon Style="{StaticResource ToolbarIcon}"
+                                           Margin="0,0,4,0"
+                                           Symbol="BookInformation20" />
                             <TextBlock Text="加载符号" />
                         </StackPanel>
                     </Button>
@@ -555,7 +578,9 @@
                             Command="{Binding CloseProcessHandleCommand}"
                             ToolTip="关闭当前进程句柄">
                         <StackPanel Orientation="Horizontal">
-                            <ui:SymbolIcon Symbol="DismissCircle12" Margin="0,0,4,0" />
+                            <ui:SymbolIcon Style="{StaticResource ToolbarIcon}"
+                                           Margin="0,0,4,0"
+                                           Symbol="DismissCircle12" />
                             <TextBlock Text="关闭进程句柄" />
                         </StackPanel>
                     </Button>
@@ -564,7 +589,8 @@
                             Padding="6,4"
                             ToolTip="拖动控制栏">
                         <StackPanel Orientation="Horizontal">
-                            <ui:SymbolIcon Symbol="PanelSeparateWindow20" />
+                            <ui:SymbolIcon Style="{StaticResource ToolbarIcon}"
+                                           Symbol="PanelSeparateWindow20" />
                         </StackPanel>
                     </Button>
                 </StackPanel>
@@ -574,12 +600,15 @@
                             VerticalAlignment="Center">
                     <Button x:Name="ToolbarAiAssistantButton"
                             Style="{StaticResource ToolbarButton}"
+                            Height="25"
                             Margin="6,2,4,2"
-                            Padding="10,4"
+                            Padding="11.5,4"
                             Click="OnOpenAiAssistantClick"
                             ToolTip="打开 AI 助手">
                         <StackPanel Orientation="Horizontal">
-                            <ui:SymbolIcon Symbol="Sparkle20" Margin="0,0,5,0" />
+                            <ui:SymbolIcon Style="{StaticResource ToolbarIcon}"
+                                           Margin="0,0,5,0"
+                                           Symbol="Sparkle20" />
                             <TextBlock Text="AI 助手" />
                         </StackPanel>
                     </Button>
@@ -718,8 +747,9 @@
                                         <avalonTheme:Vs2013LightTheme />
                                     </avalonDock:DockingManager.Theme>
                                     <avalonDock:LayoutRoot>
-                                        <avalonDock:LayoutPanel Orientation="Vertical">
-                                            <avalonDock:LayoutPanel Orientation="Horizontal">
+                                        <avalonDock:LayoutPanel Orientation="Horizontal">
+                                            <avalonDock:LayoutAnchorablePaneGroup Orientation="Vertical"
+                                                                                     DockWidth="*">
                                                 <avalonDock:LayoutAnchorablePane>
                                                     <avalonDock:LayoutAnchorable Title="反汇编"
                                                                                  ContentId="DisassemblyView"
@@ -748,11 +778,11 @@
                                                         </avalonDock:LayoutAnchorable.Content>
                                                     </avalonDock:LayoutAnchorable>
                                                 </avalonDock:LayoutAnchorablePane>
-                                            </avalonDock:LayoutPanel>
-                                            <avalonDock:LayoutAnchorablePaneGroup Orientation="Horizontal"
-                                                                                   DockHeight="210">
+                                            </avalonDock:LayoutAnchorablePaneGroup>
+                                            <avalonDock:LayoutAnchorablePaneGroup Orientation="Vertical"
+                                                                                     DockWidth="*">
                                                 <avalonDock:LayoutAnchorablePane>
-                                                    <avalonDock:LayoutAnchorable Title="寄存器"
+                                                    <avalonDock:LayoutAnchorable Title="寄存器(双击在数据视图跳转)"
                                                                                  ContentId="RegisterView"
                                                                                  CanClose="False"
                                                                                  CanHide="False"
@@ -999,7 +1029,7 @@
                         Background="#FF0067C0"
                         Padding="10,0">
                     <TextBlock x:Name="StatusLabel"
-                               Text="就绪"
+                               Text="{Binding StatusLabelText}"
                                Foreground="White"
                                HorizontalAlignment="Center"
                                VerticalAlignment="Center" />
@@ -1012,7 +1042,7 @@
                            Grid.Column="2"
                            Margin="8,0"
                            VerticalAlignment="Center"
-                           Text="{Binding StatusText}" />
+                           Text="{Binding StatusDescriptionText}" />
                 <TextBlock Grid.Column="3"
                            Margin="8,0"
                            VerticalAlignment="Center"
@@ -1032,8 +1062,8 @@
               Panel.ZIndex="100"
               Background="#99000000"
               Visibility="Collapsed">
-            <Border Width="800"
-                    MaxHeight="520"
+            <Border Width="1170"
+                    Height="682"
                     Padding="16"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
@@ -1057,7 +1087,7 @@
                             <TextBlock Margin="16,0,0,0"
                                        VerticalAlignment="Center"
                                        Foreground="#FF777777"
-                                       Text="当前程序已注册命令" />
+                                       Text="当前方案: x64dbg" />
                         </StackPanel>
                         <StackPanel Orientation="Horizontal"
                                     HorizontalAlignment="Right">
@@ -1079,9 +1109,11 @@
                                   Margin="0,16,0,0"
                                   VerticalScrollBarVisibility="Auto">
                         <ItemsControl x:Name="CheatSheetGroups">
+                            <ItemsControl.Width>930</ItemsControl.Width>
+                            <ItemsControl.HorizontalAlignment>Left</ItemsControl.HorizontalAlignment>
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
-                                    <UniformGrid Columns="2" />
+                                    <UniformGrid Columns="3" />
                                 </ItemsPanelTemplate>
                             </ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate>

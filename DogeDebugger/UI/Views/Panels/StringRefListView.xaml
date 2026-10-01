@@ -5,86 +5,94 @@
              xmlns:controls="clr-namespace:DogeDebugger.UI.Controls">
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
+            <RowDefinition Height="42" />
             <RowDefinition Height="*" />
+            <RowDefinition Height="21" />
         </Grid.RowDefinitions>
 
         <Border Grid.Row="0"
-                Padding="6,3"
+                Padding="6,4"
                 BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
                 BorderThickness="0,0,0,1">
-            <DockPanel>
-                <StackPanel DockPanel.Dock="Left"
-                            Orientation="Horizontal">
-                    <ui:Button Appearance="Secondary"
-                               FontSize="11"
-                               Padding="9,3"
-                               Margin="0,0,3,0"
-                               IsEnabled="False"
-                               Content="选择模块" />
-                    <ui:Button Appearance="Primary"
-                               FontSize="11"
-                               Padding="9,3"
-                               Margin="0,0,3,0"
-                               Command="{Binding ScanStringReferencesCommand}">
-                        <StackPanel Orientation="Horizontal">
-                            <ui:SymbolIcon Symbol="Search24"
-                                           Margin="0,0,5,0" />
-                            <TextBlock Text="开始扫描" />
-                        </StackPanel>
-                    </ui:Button>
-                    <ui:Button Appearance="Secondary"
-                               FontSize="11"
-                               Padding="9,3"
-                               Margin="0,0,10,0"
-                               IsEnabled="False"
-                               Content="停止" />
-                    <CheckBox Margin="0,0,6,0"
-                              VerticalAlignment="Center"
-                              IsChecked="{Binding IncludeUnicodeInStringScan}"
-                              Content="包含 Unicode" />
-                    <TextBlock VerticalAlignment="Center"
-                               FontSize="11"
-                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                               Text="未选择模块" />
-                </StackPanel>
-                <Border />
-            </DockPanel>
+            <StackPanel Orientation="Horizontal">
+                <ui:Button Width="81"
+                           Height="22"
+                           Padding="7,2"
+                           FontSize="11"
+                           Appearance="Secondary"
+                           Margin="0,0,4,0"
+                           Content="选择模块" />
+                <ui:Button Width="81"
+                           Height="22"
+                           Padding="7,2"
+                           FontSize="11"
+                           Appearance="Primary"
+                           Margin="0,0,4,0"
+                           Command="{Binding ScanStringReferencesCommand}">
+                    <StackPanel Orientation="Horizontal">
+                        <ui:SymbolIcon Symbol="Search24"
+                                       FontSize="12"
+                                       Margin="0,0,5,0" />
+                        <TextBlock FontSize="11"
+                                   Text="开始扫描" />
+                    </StackPanel>
+                </ui:Button>
+                <ui:Button Width="59"
+                           Height="22"
+                           Padding="7,2"
+                           FontSize="11"
+                           Appearance="Secondary"
+                           Margin="0,0,10,0"
+                           IsEnabled="False"
+                           Content="停止" />
+                <CheckBox Width="120"
+                          Height="32"
+                          FontSize="11"
+                          VerticalContentAlignment="Center"
+                          IsChecked="{Binding IncludeUnicodeInStringScan}"
+                          Content="包含 Unicode" />
+                <TextBlock Margin="12,0,0,0"
+                           VerticalAlignment="Center"
+                           FontSize="11"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                           Text="未选择模块" />
+            </StackPanel>
         </Border>
 
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="5" />
+                <ColumnDefinition Width="653" />
+                <ColumnDefinition Width="4" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
             <Grid Grid.Column="0">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="38" />
                     <RowDefinition Height="*" />
-                    <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
                 <Border Grid.Row="0"
                         Padding="6,4"
                         BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
                         BorderThickness="0,0,0,1">
-                    <DockPanel>
-                        <TextBlock DockPanel.Dock="Left"
+                    <Grid>
+                        <TextBlock HorizontalAlignment="Left"
                                    VerticalAlignment="Center"
                                    Text="字符串列表" />
-                        <TextBlock DockPanel.Dock="Right"
-                                   Margin="8,0,5,0"
-                                   VerticalAlignment="Center"
-                                   FontSize="11"
-                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                                   Text="搜索:" />
-                        <TextBox x:Name="StringSearchBox"
-                                 Width="150"
-                                 Height="25"
-                                 Padding="5,2"
-                                 TextChanged="OnFilterChanged" />
-                    </DockPanel>
+                        <StackPanel HorizontalAlignment="Right"
+                                    Orientation="Horizontal">
+                            <TextBlock Margin="0,0,5,0"
+                                       VerticalAlignment="Center"
+                                       FontSize="11"
+                                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                       Text="搜索:" />
+                            <TextBox x:Name="StringSearchBox"
+                                     Width="160"
+                                     Height="30"
+                                     Padding="5,2"
+                                     TextChanged="OnFilterChanged" />
+                        </StackPanel>
+                    </Grid>
                 </Border>
                 <DataGrid x:Name="StringGrid"
                           Grid.Row="1"
@@ -103,49 +111,34 @@
                           BorderThickness="0"
                           Background="Transparent"
                           FontFamily="Cascadia Code, Consolas, monospace"
-                          FontSize="12"
+                          FontSize="11"
                           MouseDoubleClick="OnStringGridDoubleClick">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="地址"
                                             Binding="{Binding AddressText}"
-                                            Width="135" />
+                                            Width="160" />
                         <DataGridTextColumn Header="内容"
                                             Binding="{Binding Text}"
-                                            Width="210" />
+                                            Width="*" />
                         <DataGridTextColumn Header="引用数"
                                             Binding="{Binding ReferenceCount}"
-                                            Width="68" />
+                                            Width="60" />
                     </DataGrid.Columns>
                 </DataGrid>
-                <Border Grid.Row="2"
-                        Padding="8,3"
-                        BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
-                        BorderThickness="0,1,0,0"
-                        Background="{DynamicResource SubtleFillColorSecondaryBrush}">
-                    <TextBlock FontSize="11"
-                               Foreground="{DynamicResource TextFillColorSecondaryBrush}">
-                        <Run Text="字符串: " />
-                        <Run FontWeight="SemiBold"
-                             Text="{Binding StringReferences.Count, Mode=OneWay}" />
-                        <Run Text="   引用: " />
-                        <Run FontWeight="SemiBold" Text="{Binding SelectedString.ReferenceCount}" />
-                    </TextBlock>
-                </Border>
             </Grid>
 
             <GridSplitter Grid.Column="1"
-                          Width="5"
+                          Width="4"
                           HorizontalAlignment="Stretch"
                           Background="{DynamicResource ControlStrokeColorDefaultBrush}" />
 
             <Grid Grid.Column="2">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="22" />
                     <RowDefinition Height="*" />
-                    <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
                 <Border Grid.Row="0"
-                        Padding="6,4"
+                        Padding="6,2"
                         BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
                         BorderThickness="0,0,0,1">
                     <DockPanel>
@@ -159,7 +152,8 @@
                                    Text="选择左侧字符串以查看引用" />
                     </DockPanel>
                 </Border>
-                <DataGrid Grid.Row="1"
+                <DataGrid x:Name="ReferenceGrid"
+                          Grid.Row="1"
                           ItemsSource="{Binding SelectedStringReferences}"
                           AutoGenerateColumns="False"
                           IsReadOnly="True"
@@ -171,31 +165,39 @@
                           BorderThickness="0"
                           Background="Transparent"
                           FontFamily="Cascadia Code, Consolas, monospace"
-                          FontSize="12"
+                          FontSize="11"
                           MouseDoubleClick="OnReferenceGridDoubleClick">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="引用地址"
                                             Binding="{Binding StringFormat=0x{0:X}}"
-                                            Width="160" />
+                                            Width="180" />
                         <DataGridTextColumn Header="反汇编"
-                                            Width="250" />
+                                            Width="*" />
                     </DataGrid.Columns>
                 </DataGrid>
-                <Border Grid.Row="2"
-                        Padding="8,3"
-                        BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
-                        BorderThickness="0,1,0,0"
-                        Background="{DynamicResource SubtleFillColorSecondaryBrush}">
-                    <TextBlock FontSize="11"
-                               Foreground="{DynamicResource TextFillColorSecondaryBrush}">
-                        <Run Text="显示: " />
-                        <Run FontWeight="SemiBold"
-                             Text="{Binding SelectedStringReferences.Count, Mode=OneWay}" />
-                    </TextBlock>
-                </Border>
             </Grid>
         </Grid>
+
+        <Border Grid.Row="2"
+                Padding="8,3"
+                BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                BorderThickness="0,1,0,0"
+                Background="{DynamicResource SubtleFillColorSecondaryBrush}">
+            <TextBlock FontSize="11"
+                       Foreground="{DynamicResource TextFillColorSecondaryBrush}">
+                <Run Text="字符串:  " />
+                <Run FontWeight="SemiBold"
+                     Text="{Binding StringReferences.Count, Mode=OneWay}" />
+                <Run Text="   引用:  " />
+                <Run FontWeight="SemiBold"
+                     Text="{Binding SelectedString.ReferenceCount}" />
+                <Run Text="   显示:  " />
+                <Run FontWeight="SemiBold"
+                     Text="{Binding SelectedStringReferences.Count, Mode=OneWay}" />
+            </TextBlock>
+        </Border>
+
         <controls:PanelProcessOverlay Grid.Row="0"
-                                      Grid.RowSpan="2" />
+                                      Grid.RowSpan="3" />
     </Grid>
 </UserControl>

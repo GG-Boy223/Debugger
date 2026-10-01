@@ -12,7 +12,13 @@ public sealed class BreakpointEntry
 
     public bool IsTemporary { get; init; }
 
+    public bool IsInternal { get; internal set; }
+
+    public string InternalOwnerId { get; internal set; } = string.Empty;
+
     public byte OriginalByte { get; internal set; }
+
+    public bool HasOriginalByte { get; internal set; }
 
     public long HitCount { get; internal set; }
 
@@ -26,15 +32,19 @@ public sealed class BreakpointEntry
 
     public int ConditionMissCount { get; internal set; }
 
+    public bool HasConditionError { get; internal set; }
+
     public string AddressText => $"0x{Address:X}";
+
+    public string DisplayAddressText { get; internal set; } = string.Empty;
 
     public string KindText => Kind switch
     {
-        BreakpointKind.Software => "软件",
-        BreakpointKind.HardwareExecute => "硬件执行",
-        BreakpointKind.HardwareRead => "硬件读取",
-        BreakpointKind.HardwareWrite => "硬件写入",
-        BreakpointKind.HardwareReadWrite => "硬件读写",
+        BreakpointKind.Software => "软断",
+        BreakpointKind.HardwareExecute => "硬断 执行",
+        BreakpointKind.HardwareRead => "硬断 读写",
+        BreakpointKind.HardwareWrite => "硬断 写入",
+        BreakpointKind.HardwareReadWrite => "硬断 读写",
         _ => Kind.ToString()
     };
 

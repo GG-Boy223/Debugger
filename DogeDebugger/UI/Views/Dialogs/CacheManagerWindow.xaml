@@ -13,7 +13,7 @@
                  Foreground="#E4000000"
                  FontFamily="{DynamicResource AppUiFontFamily}"
                  FontSize="{DynamicResource AppUiFontSize}">
-    <TabControl Margin="8"
+    <TabControl Margin="16,38,16,16"
                 ItemsSource="{Binding Tabs}"
                 SelectedItem="{Binding SelectedTab}">
         <TabControl.ItemTemplate>
@@ -21,7 +21,7 @@
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Text="{Binding Header}" />
                     <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                               Text="{Binding Count}" />
+                               Text="{Binding Count, StringFormat=' ({0})'}" />
                 </StackPanel>
             </DataTemplate>
         </TabControl.ItemTemplate>
